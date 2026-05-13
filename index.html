@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blacksmith InfoSec | Compliance Profile Generator</title>
+<meta name="description" content="Generate a ranked list of likely applicable compliance frameworks and regulations based on your organization's industry, jurisdiction, data types, and contracts.">
+<link rel="icon" type="image/svg+xml" href="assets/Bright_Blue.svg">
+<link rel="apple-touch-icon" href="assets/Bright_Blue.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+  // Apply stored theme before paint to avoid flash
+  (function() {
+    try {
+      var stored = localStorage.getItem('bs-theme');
+      if (stored === 'dark' || stored === 'light') {
+        document.documentElement.setAttribute('data-theme', stored);
+      }
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand" aria-label="Blacksmith Compliance Profile Generator">
+      <img class="brand-mark brand-mark-light" src="assets/Dark_Blue.svg" alt="Blacksmith logo">
+      <img class="brand-mark brand-mark-dark" src="assets/Bright_Blue.svg" alt="Blacksmith logo">
+      <div class="brand-text">
+        <span class="brand-name">Blacksmith<span class="brand-dot">.</span></span>
+        <span class="brand-sub">Compliance Profile Generator</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <nav class="header-nav">
+        <a href="https://github.com/blacksmith-infosec/compliance-profile-generator" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://blacksmithinfosec.com" target="_blank" rel="noopener">Blacksmith</a>
+      </nav>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.5" y1="4.5" x2="6.5" y2="6.5"/><line x1="17.5" y1="17.5" x2="19.5" y2="19.5"/><line x1="4.5" y1="19.5" x2="6.5" y2="17.5"/><line x1="17.5" y1="6.5" x2="19.5" y2="4.5"/></g></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="container main">
+
+  <section class="intro">
+    <h1 class="intro-title">What applies to <span class="accent-text">this</span> client<span class="accent-text">.</span></h1>
+    <p class="intro-lede">Answer a short profile and get a ranked list of compliance frameworks and regulations the organization likely needs to address. Built for MSPs, vCISOs, and auditors who need a defensible starting point in minutes, not days.</p>
+    <p class="intro-note">This is an indicative tool. It does not constitute legal advice. Verify obligations with qualified counsel before making compliance decisions.</p>
+  </section>
+
+  <div class="layout">
+
+    <form id="profile-form" class="form-panel" novalidate>
+
+      <!-- PROFILE IDENTIFIERS -->
+      <div class="profile-identifier">
+        <div class="profile-identifier-field">
+          <label class="profile-identifier-label" for="company_name">Client name <span class="optional">(optional)</span></label>
+          <input type="text" id="company_name" name="company_name" class="profile-identifier-input" placeholder="Client or organization name" autocomplete="off" maxlength="100">
+        </div>
+        <div class="profile-identifier-field">
+          <label class="profile-identifier-label" for="msp_name">Prepared by <span class="optional">(optional)</span></label>
+          <input type="text" id="msp_name" name="msp_name" class="profile-identifier-input" placeholder="Your firm or MSP name" autocomplete="off" maxlength="100">
+        </div>
+      </div>
+
+      <!-- SECTION 1: ORGANIZATION -->
+      <fieldset class="section">
+        <legend class="section-legend">
+          <span class="section-number">01<span class="section-dot">.</span></span>
+          <span class="section-title">Organization</span>
+        </legend>
+
+        <div class="field" data-field="industry">
+          <label class="field-label" for="industry">Primary industry</label>
+          <select id="industry" name="industry" class="control">
+            <option value="">Select an industry</option>
+            <option value="healthcare">Healthcare and life sciences</option>
+            <option value="financial_services">Financial services</option>
+            <option value="defense">Defense industrial base</option>
+            <option value="retail">Retail and e-commerce</option>
+            <option value="education">Education</option>
+            <option value="government">Government (state, local, tribal)</option>
+            <option value="technology">Technology and SaaS</option>
+            <option value="manufacturing">Manufacturing</option>
+            <option value="professional_services">Professional services</option>
+            <option value="energy">Energy and utilities</option>
+            <option value="legal">Legal</option>
+            <option value="insurance">Insurance</option>
+            <option value="hospitality">Hospitality and travel</option>
+            <option value="real_estate">Real estate</option>
+            <option value="nonprofit">Nonprofit</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="field" data-field="revenue">
+          <label class="field-label" for="revenue">Annual revenue (USD)</label>
+          <select id="revenue" name="revenue" class="control">
+            <option value="">Select a range</option>
+            <option value="under_1m">Under $1M</option>
+            <option value="1m_10m">$1M to $10M</option>
+            <option value="10m_50m">$10M to $50M</option>
+            <option value="50m_250m">$50M to $250M</option>
+            <option value="over_250m">Over $250M</option>
+          </select>
+        </div>
+
+        <div class="field" data-field="employees">
+          <label class="field-label" for="employees">Employee count</label>
+          <select id="employees" name="employees" class="control">
+            <option value="">Select a range</option>
+            <option value="1_50">1 to 50</option>
+            <option value="51_250">51 to 250</option>
+            <option value="251_1000">251 to 1,000</option>
+            <option value="over_1000">Over 1,000</option>
+          </select>
+        </div>
+
+        <div class="field" data-field="public_status">
+          <span class="field-label">Public company status</span>
+          <div class="radio-group">
+            <label class="option"><input type="radio" name="public_status" value="private"> <span>Private</span></label>
+            <label class="option"><input type="radio" name="public_status" value="planning_ipo"> <span>Planning IPO within 24 months</span></label>
+            <label class="option"><input type="radio" name="public_status" value="public"> <span>Publicly traded (US exchange)</span></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- SECTION 2: GEOGRAPHY -->
+      <fieldset class="section">
+        <legend class="section-legend">
+          <span class="section-number">02<span class="section-dot">.</span></span>
+          <span class="section-title">Geography</span>
+        </legend>
+
+        <div class="field" data-field="us_states">
+          <span class="field-label">US state operations</span>
+          <div class="checkbox-group">
+            <label class="option"><input type="checkbox" name="us_states" value="ca"> <span>California</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="ny"> <span>New York</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="tx"> <span>Texas</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="ma"> <span>Massachusetts</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="co"> <span>Colorado</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="va"> <span>Virginia</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="ct"> <span>Connecticut</span></label>
+            <label class="option"><input type="checkbox" name="us_states" value="other_us"> <span>Other US states</span></label>
+          </div>
+          <p class="field-help">Select all that apply. State privacy and breach laws can apply based on resident data, even without physical presence.</p>
+        </div>
+
+        <div class="field" data-field="international">
+          <span class="field-label">International operations or data subjects</span>
+          <div class="checkbox-group">
+            <label class="option"><input type="checkbox" name="international" value="eu"> <span>EU / EEA</span></label>
+            <label class="option"><input type="checkbox" name="international" value="uk"> <span>United Kingdom</span></label>
+            <label class="option"><input type="checkbox" name="international" value="canada"> <span>Canada</span></label>
+            <label class="option"><input type="checkbox" name="international" value="other_intl"> <span>Other international</span></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- SECTION 3: DATA -->
+      <fieldset class="section">
+        <legend class="section-legend">
+          <span class="section-number">03<span class="section-dot">.</span></span>
+          <span class="section-title">Data handled</span>
+        </legend>
+
+        <div class="field" data-field="data_types">
+          <span class="field-label">Sensitive data types stored, processed, or transmitted</span>
+          <div class="checkbox-group">
+            <label class="option"><input type="checkbox" name="data_types" value="phi"> <span>Protected Health Information (PHI / ePHI)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="pci"> <span>Payment card data (cardholder or authentication data)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="pii"> <span>Personally Identifiable Information (general PII)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="cui"> <span>Controlled Unclassified Information (CUI)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="fci"> <span>Federal Contract Information (FCI)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="financial"> <span>Financial records (account, transaction, lending data)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="student"> <span>Student educational records</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="children"> <span>Personal data of children under 13</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="biometric"> <span>Biometric data</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="cji"> <span>Criminal Justice Information (CJI)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="fti"> <span>Federal Tax Information (FTI)</span></label>
+            <label class="option"><input type="checkbox" name="data_types" value="none"> <span>None of the above</span></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- SECTION 4: CUSTOMERS & CONTRACTS -->
+      <fieldset class="section">
+        <legend class="section-legend">
+          <span class="section-number">04<span class="section-dot">.</span></span>
+          <span class="section-title">Customers and contracts</span>
+        </legend>
+
+        <div class="field" data-field="customer_types">
+          <span class="field-label">Customer types</span>
+          <div class="checkbox-group">
+            <label class="option"><input type="checkbox" name="customer_types" value="consumers"> <span>Direct consumers (B2C)</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="businesses"> <span>Other businesses (B2B)</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="healthcare_orgs"> <span>Healthcare organizations</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="financial_orgs"> <span>Financial institutions</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="federal_civilian"> <span>US federal government (civilian)</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="dod"> <span>US Department of Defense</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="state_local"> <span>State or local government</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="education"> <span>Educational institutions</span></label>
+          </div>
+        </div>
+
+        <div class="field conditional" data-field="contracts">
+          <span class="field-label">Contractual or customer-imposed requirements</span>
+          <p class="field-help">Showing because the customer types or industry suggest these may be relevant.</p>
+          <div class="checkbox-group">
+            <label class="option"><input type="checkbox" name="contracts" value="dfars"> <span>DFARS 252.204-7012 / 7019 / 7020 clauses</span></label>
+            <label class="option"><input type="checkbox" name="contracts" value="far_171"> <span>FAR contracts requiring NIST SP 800-171</span></label>
+            <label class="option"><input type="checkbox" name="contracts" value="soc2"> <span>Customer-mandated SOC 2 reports</span></label>
+            <label class="option"><input type="checkbox" name="contracts" value="iso27001"> <span>Customer-mandated ISO 27001 certification</span></label>
+            <label class="option"><input type="checkbox" name="contracts" value="cyber_insurance"> <span>Cyber insurance attestations or controls</span></label>
+            <label class="option"><input type="checkbox" name="contracts" value="card_brand"> <span>Card brand merchant or service provider agreement</span></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- SECTION 5: OPERATIONS -->
+      <fieldset class="section" id="section-operations">
+        <legend class="section-legend">
+          <span class="section-number">05<span class="section-dot">.</span></span>
+          <span class="section-title">Operations</span>
+        </legend>
+
+        <div class="field conditional" data-field="card_handling">
+          <label class="field-label" for="card_handling">Payment card handling</label>
+          <p class="field-help">Showing because your industry or selected data types suggest payment cards may be relevant.</p>
+          <select id="card_handling" name="card_handling" class="control">
+            <option value="">Select an option</option>
+            <option value="none">Does not accept payment cards</option>
+            <option value="redirected">Accepts cards only via fully outsourced redirect (e.g., Stripe Checkout)</option>
+            <option value="processed">Processes or stores cardholder data directly</option>
+            <option value="service_provider">Service provider to merchants (e.g., gateway, processor, hosting)</option>
+          </select>
+        </div>
+
+        <div class="field conditional" data-field="critical_infra">
+          <span class="field-label">Critical infrastructure sector</span>
+          <p class="field-help">Showing because the energy industry has sector-specific cybersecurity standards.</p>
+          <div class="radio-group">
+            <label class="option"><input type="radio" name="critical_infra" value="none"> <span>Not a critical infrastructure operator</span></label>
+            <label class="option"><input type="radio" name="critical_infra" value="energy"> <span>Energy / utilities (bulk electric system)</span></label>
+            <label class="option"><input type="radio" name="critical_infra" value="other_ci"> <span>Other critical infrastructure sector</span></label>
+          </div>
+        </div>
+
+        <div class="field conditional" data-field="provider_role">
+          <span class="field-label">Service provider role</span>
+          <p class="field-help">Showing because your customers or industry suggest you may serve other organizations.</p>
+          <div class="checkbox-group">
+            <label class="option"><input type="checkbox" name="provider_role" value="msp"> <span>MSP or MSSP serving other organizations</span></label>
+            <label class="option"><input type="checkbox" name="provider_role" value="saas"> <span>SaaS provider</span></label>
+            <label class="option"><input type="checkbox" name="provider_role" value="cloud"> <span>Cloud infrastructure provider (IaaS / PaaS)</span></label>
+            <label class="option"><input type="checkbox" name="provider_role" value="none"> <span>Not a service provider in any of these ways</span></label>
+          </div>
+        </div>
+
+        <p class="section-empty-state">
+          Based on your answers above, no operational details need to be collected. You can generate the profile now.
+        </p>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Generate profile</button>
+        <button type="reset" class="btn btn-ghost">Reset</button>
+      </div>
+
+    </form>
+
+    <aside id="results-panel" class="results-panel" aria-live="polite">
+
+      <!-- Print-only report header -->
+      <div class="report-header" aria-hidden="true">
+        <svg class="report-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1010.16 1200" aria-hidden="true">
+          <polygon fill="#231f20" points="844.27 1 166.99 1 22.57 374.1 0 990.36 394.3 1201 394.3 683.2 490.31 594.02 166.99 594.02 166.99 374.1 414.67 374.1 414.67 319.12 596.3 319.12 596.3 374.1 733.21 374.1 868.61 592.66 616.41 594.02 616.41 1201 1010.16 990.5 987.88 374.1 844.27 1"/>
+        </svg>
+        <div class="report-titleblock">
+          <p class="report-eyebrow">Blacksmith InfoSec</p>
+          <h2 class="report-title">Compliance Profile Report</h2>
+          <div class="report-meta">
+            <p class="report-meta-line report-client-row"><strong>Prepared for:</strong> <span class="report-client"></span></p>
+            <p class="report-meta-line report-msp-row"><strong>Prepared by:</strong> <span class="report-msp"></span></p>
+            <p class="report-meta-line"><strong>Generated:</strong> <span class="report-date"></span></p>
+            <p class="report-meta-line"><strong>Summary:</strong> <span class="report-summary"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen results / placeholder -->
+      <div id="results-content-wrapper">
+        <div class="results-placeholder">
+          <img class="placeholder-mark placeholder-mark-light" src="assets/Dark_Blue.svg" alt="">
+          <img class="placeholder-mark placeholder-mark-dark" src="assets/Bright_Blue.svg" alt="">
+          <p class="placeholder-text">Complete the profile to generate a list of likely applicable frameworks and regulations<span class="accent-text">.</span></p>
+        </div>
+      </div>
+
+      <!-- Print-only report footer -->
+      <div class="report-footer" aria-hidden="true">
+        <p>Generated by the Compliance Profile Generator, an open source tool by Blacksmith InfoSec.</p>
+        <p class="report-source">github.com/blacksmith-infosec/compliance-profile-generator</p>
+        <p class="report-disclaimer">This report is indicative and does not constitute legal advice. Verify obligations with qualified counsel before making compliance decisions.</p>
+      </div>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p>Open source under MIT. Built and maintained by <a href="https://blacksmithinfosec.com" target="_blank" rel="noopener">Blacksmith InfoSec</a>. Contributions welcome on <a href="https://github.com/blacksmith-infosec/compliance-profile-generator" target="_blank" rel="noopener">GitHub</a>.</p>
+  </div>
+</footer>
+
+<script src="data/frameworks.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+/* =================================================================
+   Compliance Profile Generator - Application Logic
+   ================================================================= */
+
+(function () {
+  'use strict';
+
+  // -----------------------------------------------------------------
+  // THEME TOGGLE
+  // -----------------------------------------------------------------
+
+  function getCurrentTheme() {
+    var explicit = document.documentElement.getAttribute('data-theme');
+    if (explicit) return explicit;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('bs-theme', theme); } catch (e) {}
+  }
+
+  function toggleTheme() {
+    var current = getCurrentTheme();
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  // -----------------------------------------------------------------
+  // CONDITIONAL FIELD VISIBILITY
+  // -----------------------------------------------------------------
+
+  var VISIBILITY_RULES = {
+    contracts: {
+      show_when: [
+        { customer_types_includes_any: ['businesses', 'federal_civilian', 'dod', 'state_local', 'education', 'healthcare_orgs', 'financial_orgs'] },
+        { industry_in: ['defense', 'technology', 'professional_services'] }
+      ]
+    },
+    card_handling: {
+      show_when: [
+        { data_types_includes: 'pci' },
+        { industry_in: ['retail', 'hospitality', 'healthcare', 'financial_services', 'education', 'nonprofit', 'professional_services', 'insurance', 'legal'] }
+      ]
+    },
+    critical_infra: {
+      show_when: [
+        { industry_in: ['energy'] }
+      ]
+    },
+    provider_role: {
+      show_when: [
+        { industry_in: ['technology'] },
+        { customer_types_includes_any: ['businesses', 'federal_civilian', 'dod', 'state_local', 'education', 'healthcare_orgs', 'financial_orgs'] }
+      ]
+    }
+  };
+
+  function checkCondition(condition, data) {
+    if ('industry_in' in condition) {
+      return condition.industry_in.indexOf(data.industry) !== -1;
+    }
+    if ('data_types_includes' in condition) {
+      return Array.isArray(data.data_types) &&
+        data.data_types.indexOf(condition.data_types_includes) !== -1;
+    }
+    if ('customer_types_includes_any' in condition) {
+      return Array.isArray(data.customer_types) &&
+        condition.customer_types_includes_any.some(function (v) {
+          return data.customer_types.indexOf(v) !== -1;
+        });
+    }
+    return false;
+  }
+
+  function shouldShowField(fieldName, data) {
+    var rule = VISIBILITY_RULES[fieldName];
+    if (!rule) return true;
+    return rule.show_when.some(function (cond) {
+      return checkCondition(cond, data);
+    });
+  }
+
+  function clearFieldValue(fieldEl) {
+    var inputs = fieldEl.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+    inputs.forEach(function (input) { input.checked = false; });
+    var selects = fieldEl.querySelectorAll('select');
+    selects.forEach(function (sel) { sel.value = ''; });
+  }
+
+  function updateConditionalFields(form) {
+    var data = readForm(form);
+    Object.keys(VISIBILITY_RULES).forEach(function (fieldName) {
+      var fieldEl = form.querySelector('[data-field="' + fieldName + '"]');
+      if (!fieldEl) return;
+      var shouldShow = shouldShowField(fieldName, data);
+      if (shouldShow) {
+        fieldEl.classList.add('visible');
+      } else {
+        if (fieldEl.classList.contains('visible')) {
+          clearFieldValue(fieldEl);
+        }
+        fieldEl.classList.remove('visible');
+      }
+    });
+
+    var section5 = document.getElementById('section-operations');
+    if (section5) {
+      var anyVisible = section5.querySelectorAll('.field.conditional.visible').length > 0;
+      section5.classList.toggle('all-hidden', !anyVisible);
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // FORM DATA EXTRACTION
+  // -----------------------------------------------------------------
+
+  function readForm(form) {
+    var data = {};
+    var multiFields = ['us_states', 'international', 'data_types', 'customer_types', 'contracts', 'provider_role'];
+
+    var fd = new FormData(form);
+    fd.forEach(function (value, key) {
+      if (multiFields.indexOf(key) === -1) {
+        data[key] = value;
+      }
+    });
+
+    multiFields.forEach(function (field) {
+      data[field] = Array.from(form.querySelectorAll('input[name="' + field + '"]:checked'))
+        .map(function (el) { return el.value; });
+    });
+
+    return data;
+  }
+
+  // -----------------------------------------------------------------
+  // CONDITION EVALUATION (for framework rules)
+  // -----------------------------------------------------------------
+
+  function evaluateCondition(conditions, data) {
+    if (!conditions || Object.keys(conditions).length === 0) return true;
+
+    for (var key in conditions) {
+      if (!Object.prototype.hasOwnProperty.call(conditions, key)) continue;
+      var expected = conditions[key];
+
+      if (key.endsWith('_includes')) {
+        var field = key.slice(0, -'_includes'.length);
+        var value = data[field];
+        if (!Array.isArray(value) || value.indexOf(expected) === -1) return false;
+      } else if (key.endsWith('_in')) {
+        var field2 = key.slice(0, -'_in'.length);
+        var value2 = data[field2];
+        if (!Array.isArray(expected) || expected.indexOf(value2) === -1) return false;
+      } else {
+        if (data[key] !== expected) return false;
+      }
+    }
+    return true;
+  }
+
+  function evaluateFramework(framework, data) {
+    var tier = null;
+    var reasons = [];
+    var tierPriority = { definite: 3, likely: 2, consider: 1 };
+
+    framework.evaluators.forEach(function (ev) {
+      if (evaluateCondition(ev.conditions, data)) {
+        reasons.push({ level: ev.level, reason: ev.reason });
+        if (!tier || tierPriority[ev.level] > tierPriority[tier]) {
+          tier = ev.level;
+        }
+      }
+    });
+
+    if (!tier) return null;
+
+    var winningReasons = reasons
+      .filter(function (r) { return tierPriority[r.level] >= tierPriority[tier]; })
+      .map(function (r) { return r.reason; });
+
+    return {
+      framework: framework,
+      tier: tier,
+      reasons: winningReasons
+    };
+  }
+
+  // -----------------------------------------------------------------
+  // VALIDATION
+  // -----------------------------------------------------------------
+
+  function validate(data, form) {
+    var requiredAlways = ['industry', 'revenue', 'employees', 'public_status'];
+    for (var i = 0; i < requiredAlways.length; i++) {
+      var f = requiredAlways[i];
+      if (!data[f]) {
+        return 'Please complete the ' + f.replace(/_/g, ' ') + ' field before generating.';
+      }
+    }
+
+    var conditionalRequired = ['card_handling', 'critical_infra'];
+    for (var j = 0; j < conditionalRequired.length; j++) {
+      var cf = conditionalRequired[j];
+      var fieldEl = form.querySelector('[data-field="' + cf + '"]');
+      if (fieldEl && fieldEl.classList.contains('visible') && !data[cf]) {
+        return 'Please complete the ' + cf.replace(/_/g, ' ') + ' field before generating.';
+      }
+    }
+
+    return null;
+  }
+
+  // -----------------------------------------------------------------
+  // RENDERING
+  // -----------------------------------------------------------------
+
+  var TIER_META = {
+    definite: { label: 'Definitely applies', screenSummary: 'definitely apply', order: 1 },
+    likely:   { label: 'Likely applies',     screenSummary: 'likely apply',     order: 2 },
+    consider: { label: 'Recommended',         screenSummary: 'recommended',      order: 3 }
+  };
+
+  function formatDate(d) {
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function populatePrintReportHeader(clientName, mspName, totalCount, grouped) {
+    // Fill in the print-only report header fields
+    var clientRow = document.querySelector('.report-client-row');
+    var clientSpan = document.querySelector('.report-client');
+    var mspRow = document.querySelector('.report-msp-row');
+    var mspSpan = document.querySelector('.report-msp');
+    var dateSpan = document.querySelector('.report-date');
+    var summarySpan = document.querySelector('.report-summary');
+
+    if (clientName) {
+      clientSpan.textContent = clientName;
+      clientRow.classList.remove('empty');
+    } else {
+      clientSpan.textContent = '';
+      clientRow.classList.add('empty');
+    }
+
+    if (mspName) {
+      mspSpan.textContent = mspName;
+      mspRow.classList.remove('empty');
+    } else {
+      mspSpan.textContent = '';
+      mspRow.classList.add('empty');
+    }
+
+    dateSpan.textContent = formatDate(new Date());
+
+    var summaryParts = [];
+    summaryParts.push(totalCount + ' framework' + (totalCount === 1 ? '' : 's') + ' identified');
+    if (grouped.definite.length) summaryParts.push(grouped.definite.length + ' definitely apply');
+    if (grouped.likely.length) summaryParts.push(grouped.likely.length + ' likely apply');
+    if (grouped.consider.length) summaryParts.push(grouped.consider.length + ' recommended');
+    summarySpan.textContent = summaryParts.join(' · ');
+  }
+
+  function renderResults(matches, clientName, mspName) {
+    var wrapper = document.getElementById('results-content-wrapper');
+
+    if (matches.length === 0) {
+      wrapper.innerHTML = '<div class="results-placeholder">' +
+        '<img class="placeholder-mark placeholder-mark-light" src="assets/Dark_Blue.svg" alt="">' +
+        '<img class="placeholder-mark placeholder-mark-dark" src="assets/Bright_Blue.svg" alt="">' +
+        '<p class="placeholder-text">No applicable frameworks matched the provided profile. Double-check the inputs, or contribute a rule fix on GitHub if a framework should have triggered.</p>' +
+        '</div>';
+      populatePrintReportHeader(clientName, mspName, 0, { definite: [], likely: [], consider: [] });
+      return;
+    }
+
+    var grouped = { definite: [], likely: [], consider: [] };
+    matches.forEach(function (m) { grouped[m.tier].push(m); });
+
+    var html = '<div class="results-content">';
+
+    html += '<div class="results-header">';
+
+    // Eyebrow: date plus optional "Prepared by" hint
+    var eyebrowText = 'Compliance Profile · ' + formatDate(new Date());
+    if (mspName) eyebrowText += ' · Prepared by ' + mspName;
+    html += '<p class="results-eyebrow">' + escapeHtml(eyebrowText) + '</p>';
+
+    if (clientName) {
+      html += '<h2 class="results-title">' + escapeHtml(clientName) + '</h2>';
+      html += '<p class="results-subtitle">' + matches.length + ' frameworks identified</p>';
+    } else {
+      html += '<h2 class="results-title">' + matches.length + ' frameworks identified</h2>';
+    }
+    html += '<div class="results-summary">';
+    html += '<span><strong>' + grouped.definite.length + '</strong> definitely apply</span>';
+    html += '<span><strong>' + grouped.likely.length + '</strong> likely apply</span>';
+    if (grouped.consider.length) html += '<span><strong>' + grouped.consider.length + '</strong> recommended</span>';
+    html += '</div>';
+    html += '<div class="results-actions">';
+    html += '<button type="button" class="btn btn-ghost btn-small" onclick="window.print()">Print / Save as PDF</button>';
+    html += '</div>';
+    html += '</div>';
+
+    ['definite', 'likely', 'consider'].forEach(function (tier) {
+      var entries = grouped[tier];
+      if (entries.length === 0) return;
+      html += '<div class="tier">';
+      html += '<div class="tier-header">';
+      html += '<span class="tier-dot ' + tier + '"></span>';
+      html += '<h3 class="tier-name">' + TIER_META[tier].label + '</h3>';
+      html += '<span class="tier-count">' + entries.length + '</span>';
+      html += '</div>';
+      entries.forEach(function (m) { html += renderFrameworkCard(m, tier); });
+      html += '</div>';
+    });
+
+    html += '</div>';
+    wrapper.innerHTML = html;
+
+    populatePrintReportHeader(clientName, mspName, matches.length, grouped);
+  }
+
+  function renderFrameworkCard(match, tier) {
+    var fw = match.framework;
+    var html = '<article class="framework-card ' + tier + '">';
+    html += '<h4 class="framework-name">' + escapeHtml(fw.name) + '</h4>';
+    html += '<div class="framework-meta">';
+    html += '<span>' + escapeHtml(fw.category) + '</span>';
+    html += '<a href="' + fw.reference_url + '" target="_blank" rel="noopener">Reference</a>';
+    html += '</div>';
+    html += '<p class="framework-desc">' + escapeHtml(fw.description) + '</p>';
+
+    if (match.reasons.length) {
+      html += '<div class="reasons-label">Why this applies</div>';
+      html += '<ul class="reasons-list">';
+      match.reasons.forEach(function (r) {
+        html += '<li>' + escapeHtml(r) + '</li>';
+      });
+      html += '</ul>';
+    }
+
+    html += '</article>';
+    return html;
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // -----------------------------------------------------------------
+  // EVENT HANDLERS
+  // -----------------------------------------------------------------
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    var form = e.target;
+    var data = readForm(form);
+
+    var error = validate(data, form);
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    var clientName = (data.company_name || '').trim();
+    var mspName = (data.msp_name || '').trim();
+
+    var matches = window.COMPLIANCE_DATA.frameworks
+      .map(function (fw) { return evaluateFramework(fw, data); })
+      .filter(function (m) { return m !== null; });
+
+    var tierOrder = { definite: 0, likely: 1, consider: 2 };
+    matches.sort(function (a, b) {
+      if (tierOrder[a.tier] !== tierOrder[b.tier]) {
+        return tierOrder[a.tier] - tierOrder[b.tier];
+      }
+      return a.framework.name.localeCompare(b.framework.name);
+    });
+
+    renderResults(matches, clientName, mspName);
+
+    if (window.innerWidth < 1024) {
+      document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function resetPlaceholder() {
+    var wrapper = document.getElementById('results-content-wrapper');
+    wrapper.innerHTML = '<div class="results-placeholder">' +
+      '<img class="placeholder-mark placeholder-mark-light" src="assets/Dark_Blue.svg" alt="">' +
+      '<img class="placeholder-mark placeholder-mark-dark" src="assets/Bright_Blue.svg" alt="">' +
+      '<p class="placeholder-text">Complete the profile to generate a list of likely applicable frameworks and regulations<span class="accent-text">.</span></p>' +
+      '</div>';
+
+    // Clear print report header
+    document.querySelector('.report-client').textContent = '';
+    document.querySelector('.report-client-row').classList.add('empty');
+    document.querySelector('.report-msp').textContent = '';
+    document.querySelector('.report-msp-row').classList.add('empty');
+    document.querySelector('.report-date').textContent = '';
+    document.querySelector('.report-summary').textContent = '';
+  }
+
+  function handleReset(e) {
+    var form = e.target;
+    setTimeout(function () {
+      updateConditionalFields(form);
+      resetPlaceholder();
+    }, 0);
+  }
+
+  // -----------------------------------------------------------------
+  // INIT
+  // -----------------------------------------------------------------
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('profile-form');
+    if (form) {
+      form.addEventListener('submit', handleSubmit);
+      form.addEventListener('reset', handleReset);
+      form.addEventListener('change', function () { updateConditionalFields(form); });
+      updateConditionalFields(form);
+    }
+
+    var themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', toggleTheme);
+    }
+  });
+
+})();
