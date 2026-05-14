@@ -114,7 +114,7 @@ This is an indicative tool. It uses heuristics based on common applicability tri
 
 ## Related open source tools by Blacksmith InfoSec
 
-- [Self-Assessment Tool](https://assess.blacksmithinfosec.com) - Quick maturity self-assessment for SMBs
+- [Risk Assessment Tool](https://assess.blacksmithinfosec.com) - Quick maturity risk assessment for SMBs
 
 ## License
 
