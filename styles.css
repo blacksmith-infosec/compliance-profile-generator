@@ -510,6 +510,11 @@ a:hover {
 
 .field.conditional.visible { display: block; }
 
+/* Options hidden because the relevant operating region isn't selected */
+.option.hidden-by-region {
+  display: none;
+}
+
 @keyframes revealIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -795,6 +800,7 @@ a:hover {
 
 .results-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-4);
 }
@@ -932,6 +938,57 @@ a:hover {
   width: 6px;
   height: 1px;
   background: var(--accent);
+}
+
+/* First steps section - "Where to start" actionable bullets */
+.first-steps-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-text);
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.first-steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  counter-reset: step-counter;
+}
+
+.first-steps-list li {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  padding-left: 22px;
+  position: relative;
+  line-height: 1.5;
+  counter-increment: step-counter;
+}
+
+.first-steps-list li::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 50%;
+  line-height: 1;
 }
 
 /* =================================================================
@@ -1185,6 +1242,46 @@ a:hover {
   .reasons-list li::before {
     background: #06233F;
     top: 7pt;
+  }
+
+  /* First steps section in print */
+  .first-steps-label {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #06233F;
+    margin-top: 8pt;
+    margin-bottom: 4pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .first-steps-list {
+    counter-reset: step-counter;
+  }
+
+  .first-steps-list li {
+    font-size: 9.5pt;
+    color: #231F20;
+    font-weight: 400;
+    padding-left: 16pt;
+    line-height: 1.4;
+    position: relative;
+    counter-increment: step-counter;
+    margin-bottom: 2pt;
+  }
+
+  .first-steps-list li::before {
+    content: counter(step-counter) ".";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 12pt;
+    font-weight: 600;
+    color: #06233F;
+    background: none;
+    border-radius: 0;
+    display: inline;
+    font-family: var(--font-body);
   }
 
   /* Report footer */

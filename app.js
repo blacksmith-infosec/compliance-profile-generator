@@ -29,10 +29,39 @@
   }
 
   // -----------------------------------------------------------------
+  // "NONE OF THE ABOVE" MUTUAL EXCLUSIVITY
+  // -----------------------------------------------------------------
+  // In any checkbox group that includes a "none" option, "none" and the
+  // specific options are mutually exclusive. Clicking "none" clears the
+  // specifics; clicking a specific option clears "none".
+
+  function enforceExclusiveNone(form, e) {
+    if (!e || !e.target || e.target.type !== 'checkbox') return;
+    var name = e.target.name;
+    var noneCb = form.querySelector('input[type="checkbox"][name="' + name + '"][value="none"]');
+    if (!noneCb) return;
+
+    if (e.target.value === 'none' && e.target.checked) {
+      // "None" just got checked - uncheck all other specifics in this group
+      form.querySelectorAll('input[type="checkbox"][name="' + name + '"]:not([value="none"])').forEach(function (cb) {
+        cb.checked = false;
+      });
+    } else if (e.target.value !== 'none' && e.target.checked) {
+      // A specific option just got checked - uncheck "none"
+      noneCb.checked = false;
+    }
+  }
+
+  // -----------------------------------------------------------------
   // CONDITIONAL FIELD VISIBILITY
   // -----------------------------------------------------------------
 
   var VISIBILITY_RULES = {
+    us_states: {
+      show_when: [
+        { operating_regions_includes: 'us' }
+      ]
+    },
     contracts: {
       show_when: [
         { customer_types_includes_any: ['businesses', 'federal_civilian', 'dod', 'state_local', 'education', 'healthcare_orgs', 'financial_orgs'] },
@@ -71,6 +100,10 @@
         condition.customer_types_includes_any.some(function (v) {
           return data.customer_types.indexOf(v) !== -1;
         });
+    }
+    if ('operating_regions_includes' in condition) {
+      return Array.isArray(data.operating_regions) &&
+        data.operating_regions.indexOf(condition.operating_regions_includes) !== -1;
     }
     return false;
   }
@@ -114,12 +147,33 @@
   }
 
   // -----------------------------------------------------------------
+  // REGION-BASED OPTION VISIBILITY
+  // -----------------------------------------------------------------
+
+  function updateRegionVisibility(form) {
+    var data = readForm(form);
+    var regions = data.operating_regions || [];
+
+    form.querySelectorAll('[data-show-region]').forEach(function (el) {
+      var required = el.dataset.showRegion;
+      if (regions.indexOf(required) !== -1) {
+        el.classList.remove('hidden-by-region');
+      } else {
+        // Hide it and clear any selected value so it can't sneak through on submit
+        el.classList.add('hidden-by-region');
+        var input = el.querySelector('input');
+        if (input && input.checked) input.checked = false;
+      }
+    });
+  }
+
+  // -----------------------------------------------------------------
   // FORM DATA EXTRACTION
   // -----------------------------------------------------------------
 
   function readForm(form) {
     var data = {};
-    var multiFields = ['us_states', 'international', 'data_types', 'customer_types', 'contracts', 'provider_role'];
+    var multiFields = ['operating_regions', 'us_states', 'data_types', 'customer_types', 'contracts', 'provider_role'];
 
     var fd = new FormData(form);
     fd.forEach(function (value, key) {
@@ -194,12 +248,21 @@
   // -----------------------------------------------------------------
 
   function validate(data, form) {
+    if (!data.operating_regions || data.operating_regions.length === 0) {
+      return 'Please select at least one operating region in section 1 before generating.';
+    }
+
     var requiredAlways = ['industry', 'revenue', 'employees', 'public_status'];
     for (var i = 0; i < requiredAlways.length; i++) {
       var f = requiredAlways[i];
       if (!data[f]) {
         return 'Please complete the ' + f.replace(/_/g, ' ') + ' field before generating.';
       }
+    }
+
+    // Multi-select fields with a "None of the above" option require explicit selection
+    if (!data.data_types || data.data_types.length === 0) {
+      return 'Please answer the "Data handled" question. Select "None of the above" if no sensitive data is handled.';
     }
 
     var conditionalRequired = ['card_handling', 'critical_infra'];
@@ -209,6 +272,12 @@
       if (fieldEl && fieldEl.classList.contains('visible') && !data[cf]) {
         return 'Please complete the ' + cf.replace(/_/g, ' ') + ' field before generating.';
       }
+    }
+
+    // provider_role: when visible, requires explicit selection (has "Not a service provider..." option)
+    var providerEl = form.querySelector('[data-field="provider_role"]');
+    if (providerEl && providerEl.classList.contains('visible') && (!data.provider_role || data.provider_role.length === 0)) {
+      return 'Please answer the service provider role question. Select "Not a service provider in any of these ways" if not applicable.';
     }
 
     return null;
@@ -301,6 +370,7 @@
     html += '</div>';
     html += '<div class="results-actions">';
     html += '<button type="button" class="btn btn-ghost btn-small" onclick="window.print()">Print / Save as PDF</button>';
+    html += '<button type="button" class="btn btn-ghost btn-small" onclick="window.copyShareLink(this)">Copy share link</button>';
     html += '</div>';
     html += '</div>';
 
@@ -342,6 +412,15 @@
       html += '</ul>';
     }
 
+    if (fw.first_steps && fw.first_steps.length) {
+      html += '<div class="first-steps-label">Where to start</div>';
+      html += '<ul class="first-steps-list">';
+      fw.first_steps.forEach(function (step) {
+        html += '<li>' + escapeHtml(step) + '</li>';
+      });
+      html += '</ul>';
+    }
+
     html += '</article>';
     return html;
   }
@@ -355,6 +434,115 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
+  // -----------------------------------------------------------------
+  // SHAREABLE URL (encode/decode profile via base64 in hash)
+  // -----------------------------------------------------------------
+
+  var SCHEMA_VERSION = 1;
+
+  function encodeProfileToHash(data) {
+    var payload = { v: SCHEMA_VERSION, profile: data };
+    var json = JSON.stringify(payload);
+    // Unicode-safe base64
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    return '#p=' + b64;
+  }
+
+  function decodeProfileFromHash() {
+    var hash = window.location.hash || '';
+    if (hash.indexOf('#p=') !== 0) return null;
+    try {
+      var b64 = hash.substring(3);
+      var json = decodeURIComponent(escape(atob(b64)));
+      var payload = JSON.parse(json);
+      if (payload.v !== SCHEMA_VERSION) {
+        console.warn('Profile URL schema version mismatch:', payload.v);
+        return null;
+      }
+      return payload.profile;
+    } catch (e) {
+      console.warn('Failed to decode profile from URL hash:', e);
+      return null;
+    }
+  }
+
+  function updateUrlHash(data) {
+    try {
+      var hash = encodeProfileToHash(data);
+      // replaceState avoids polluting browser history
+      history.replaceState(null, '', hash);
+    } catch (e) {
+      console.warn('Failed to update URL hash:', e);
+    }
+  }
+
+  function clearUrlHash() {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+
+  function applyProfileToForm(form, profile) {
+    if (!profile || typeof profile !== 'object') return;
+
+    Object.keys(profile).forEach(function (name) {
+      var value = profile[name];
+
+      if (Array.isArray(value)) {
+        // Multi-value (checkboxes)
+        value.forEach(function (v) {
+          var cb = form.querySelector('[name="' + name + '"][value="' + cssEscape(String(v)) + '"]');
+          if (cb) cb.checked = true;
+        });
+      } else if (typeof value === 'string' && value.length) {
+        // Try radio match first (named radio groups have multiple inputs)
+        var radio = form.querySelector('[name="' + name + '"][type="radio"][value="' + cssEscape(value) + '"]');
+        if (radio) {
+          radio.checked = true;
+        } else {
+          // Otherwise it's a select or text input
+          var input = form.querySelector('select[name="' + name + '"], input[name="' + name + '"]:not([type="radio"]):not([type="checkbox"])');
+          if (input) input.value = value;
+        }
+      }
+    });
+  }
+
+  function cssEscape(str) {
+    // Minimal escape for attribute selector values
+    return String(str).replace(/[\\"]/g, '\\$&');
+  }
+
+  // -----------------------------------------------------------------
+  // LAST RESULTS STORAGE (so post-render buttons can access data)
+  // -----------------------------------------------------------------
+
+  var lastResults = { matches: [], clientName: '', mspName: '' };
+
+  // -----------------------------------------------------------------
+  // GLOBAL BUTTON HANDLERS (exposed for inline onclick)
+  // -----------------------------------------------------------------
+
+  window.copyShareLink = function (btn) {
+    var url = window.location.href;
+    var revertLabel = function () {
+      if (btn) btn.textContent = 'Copy share link';
+    };
+    var showCopied = function () {
+      if (btn) {
+        btn.textContent = 'Copied!';
+        setTimeout(revertLabel, 2000);
+      }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(showCopied).catch(function () {
+        // Fallback prompt
+        window.prompt('Copy this link:', url);
+      });
+    } else {
+      window.prompt('Copy this link:', url);
+    }
+  };
 
   // -----------------------------------------------------------------
   // EVENT HANDLERS
@@ -388,6 +576,12 @@
 
     renderResults(matches, clientName, mspName);
 
+    // Store for post-render button handlers (share link)
+    lastResults = { matches: matches, clientName: clientName, mspName: mspName };
+
+    // Update URL hash so the profile is shareable
+    updateUrlHash(data);
+
     if (window.innerWidth < 1024) {
       document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -413,8 +607,11 @@
   function handleReset(e) {
     var form = e.target;
     setTimeout(function () {
+      updateRegionVisibility(form);
       updateConditionalFields(form);
       resetPlaceholder();
+      lastResults = { matches: [], clientName: '', mspName: '' };
+      clearUrlHash();
     }, 0);
   }
 
@@ -427,8 +624,34 @@
     if (form) {
       form.addEventListener('submit', handleSubmit);
       form.addEventListener('reset', handleReset);
-      form.addEventListener('change', function () { updateConditionalFields(form); });
+      form.addEventListener('change', function (e) {
+        enforceExclusiveNone(form, e);
+        updateRegionVisibility(form);
+        updateConditionalFields(form);
+      });
+
+      // Pre-fill from URL hash if present, before initial visibility passes
+      var sharedProfile = decodeProfileFromHash();
+      if (sharedProfile) {
+        applyProfileToForm(form, sharedProfile);
+      }
+
+      updateRegionVisibility(form);
       updateConditionalFields(form);
+
+      // If we restored from a shared link, auto-submit to render results
+      if (sharedProfile) {
+        // Defer one tick so visibility updates settle first
+        setTimeout(function () {
+          if (form.requestSubmit) {
+            form.requestSubmit();
+          } else {
+            // Older browsers
+            var evt = new Event('submit', { cancelable: true, bubbles: true });
+            form.dispatchEvent(evt);
+          }
+        }, 0);
+      }
     }
 
     var themeBtn = document.getElementById('theme-toggle');

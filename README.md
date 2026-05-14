@@ -16,7 +16,7 @@ The tool takes a structured profile of an organization (12 questions across 5 se
 
 Each result includes the framework name, category, brief description, the specific reasons it triggered for this profile, and a link to the authoritative source.
 
-The 30 frameworks currently covered include HIPAA, PCI DSS, NIST 800-171, CMMC, SOC 2, ISO 27001, GDPR, NIS2, UK GDPR, UK Cyber Essentials, CCPA, NY DFS Part 500, GLBA / FTC Safeguards, SOX, SEC cyber rules, FERPA, COPPA, FedRAMP, CIS Controls, NERC CIP, CJIS, IRS 1075, state breach laws, and major state privacy laws (TX, MA, CO, VA, CT, NY SHIELD).
+The 39 frameworks currently covered include HIPAA, PCI DSS, NIST 800-171, CMMC, SOC 2, ISO 27001, GDPR, NIS2, UK GDPR, UK Cyber Essentials, CCPA, NY DFS Part 500, GLBA / FTC Safeguards, SOX, SEC cyber rules, FERPA, COPPA, FedRAMP, CIS Controls, NERC CIP, CJIS, IRS 1075, state breach laws, major state privacy laws (TX, MA, CO, VA, CT, NY SHIELD), and state cybersecurity safe harbor laws (OH, UT, CT, IA, OK, TN, NE, TX, OR). Each framework includes a "Where to start" section with actionable first steps.
 
 ## Run locally
 
