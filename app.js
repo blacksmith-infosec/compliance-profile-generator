@@ -62,6 +62,17 @@
         { operating_regions_includes: 'us' }
       ]
     },
+    revenue: {
+      show_when: [
+        { us_states_includes: 'ca' }
+      ]
+    },
+    employees: {
+      show_when: [
+        { operating_regions_includes: 'eu' },
+        { us_states_includes: 'tx' }
+      ]
+    },
     contracts: {
       show_when: [
         { customer_types_includes_any: ['businesses', 'federal_civilian', 'dod', 'state_local', 'education', 'healthcare_orgs', 'financial_orgs'] },
@@ -104,6 +115,10 @@
     if ('operating_regions_includes' in condition) {
       return Array.isArray(data.operating_regions) &&
         data.operating_regions.indexOf(condition.operating_regions_includes) !== -1;
+    }
+    if ('us_states_includes' in condition) {
+      return Array.isArray(data.us_states) &&
+        data.us_states.indexOf(condition.us_states_includes) !== -1;
     }
     return false;
   }
@@ -252,7 +267,7 @@
       return 'Please select at least one operating region in section 1 before generating.';
     }
 
-    var requiredAlways = ['industry', 'revenue', 'employees', 'public_status'];
+    var requiredAlways = ['industry', 'public_status'];
     for (var i = 0; i < requiredAlways.length; i++) {
       var f = requiredAlways[i];
       if (!data[f]) {
@@ -265,7 +280,7 @@
       return 'Please answer the "Data handled" question. Select "None of the above" if no sensitive data is handled.';
     }
 
-    var conditionalRequired = ['card_handling', 'critical_infra'];
+    var conditionalRequired = ['revenue', 'employees', 'card_handling', 'critical_infra'];
     for (var j = 0; j < conditionalRequired.length; j++) {
       var cf = conditionalRequired[j];
       var fieldEl = form.querySelector('[data-field="' + cf + '"]');

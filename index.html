@@ -145,8 +145,9 @@
           </select>
         </div>
 
-        <div class="field" data-field="revenue">
+        <div class="field conditional" data-field="revenue">
           <label class="field-label" for="revenue">Annual revenue (USD)</label>
+          <p class="field-help">Showing because California is selected (used for CCPA scope thresholds).</p>
           <select id="revenue" name="revenue" class="control">
             <option value="">Select a range</option>
             <option value="under_1m">Under $1M</option>
@@ -157,8 +158,9 @@
           </select>
         </div>
 
-        <div class="field" data-field="employees">
+        <div class="field conditional" data-field="employees">
           <label class="field-label" for="employees">Employee count</label>
+          <p class="field-help">Showing because EU or Texas is selected (used for NIS2 scope and Texas safe harbor).</p>
           <select id="employees" name="employees" class="control">
             <option value="">Select a range</option>
             <option value="1_50">1 to 50</option>

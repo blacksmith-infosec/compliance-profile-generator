@@ -198,12 +198,18 @@ window.COMPLIANCE_DATA = {
       description: "EU Directive 2022/2555 on measures for a high common level of cybersecurity across the Union. Replaces NIS1 with expanded sector coverage including essential entities (energy, transport, banking, financial market infrastructure, healthcare, digital infrastructure, ICT service management, public administration) and important entities (postal, waste, chemicals, food, manufacturing of critical products, digital providers, research). Generally applies to medium and large organizations (50+ employees or over €10M turnover) in scoped sectors. Member state transposition deadline was October 2024.",
       reference_url: "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
       evaluators: [
-        { level: "likely", reason: "Energy sector with EU operations (essential entity under NIS2)", conditions: { industry: "energy", operating_regions_includes: "eu" } },
-        { level: "likely", reason: "Healthcare sector with EU operations (essential entity under NIS2)", conditions: { industry: "healthcare", operating_regions_includes: "eu" } },
-        { level: "likely", reason: "Financial services with EU operations (essential entity under NIS2)", conditions: { industry: "financial_services", operating_regions_includes: "eu" } },
-        { level: "likely", reason: "Technology / ICT service management with EU operations (essential entity under NIS2)", conditions: { industry: "technology", operating_regions_includes: "eu" } },
-        { level: "likely", reason: "Manufacturing with EU operations (potentially important entity under NIS2)", conditions: { industry: "manufacturing", operating_regions_includes: "eu" } },
-        { level: "likely", reason: "Government / public administration with EU operations (essential entity under NIS2)", conditions: { industry: "government", operating_regions_includes: "eu" } }
+        { level: "definite", reason: "Energy sector with EU operations and 50+ employees (essential entity, meets NIS2 size threshold)", conditions: { industry: "energy", operating_regions_includes: "eu", employees_in: ["51_250", "251_1000", "over_1000"] } },
+        { level: "definite", reason: "Healthcare sector with EU operations and 50+ employees (essential entity, meets NIS2 size threshold)", conditions: { industry: "healthcare", operating_regions_includes: "eu", employees_in: ["51_250", "251_1000", "over_1000"] } },
+        { level: "definite", reason: "Financial services with EU operations and 50+ employees (essential entity, meets NIS2 size threshold)", conditions: { industry: "financial_services", operating_regions_includes: "eu", employees_in: ["51_250", "251_1000", "over_1000"] } },
+        { level: "definite", reason: "Technology / ICT service management with EU operations and 50+ employees (essential entity, meets NIS2 size threshold)", conditions: { industry: "technology", operating_regions_includes: "eu", employees_in: ["51_250", "251_1000", "over_1000"] } },
+        { level: "definite", reason: "Manufacturing with EU operations and 50+ employees (potentially important entity, meets NIS2 size threshold)", conditions: { industry: "manufacturing", operating_regions_includes: "eu", employees_in: ["51_250", "251_1000", "over_1000"] } },
+        { level: "definite", reason: "Government / public administration with EU operations and 50+ employees (essential entity, meets NIS2 size threshold)", conditions: { industry: "government", operating_regions_includes: "eu", employees_in: ["51_250", "251_1000", "over_1000"] } },
+        { level: "likely", reason: "Energy sector with EU operations (essential entity under NIS2, verify size threshold)", conditions: { industry: "energy", operating_regions_includes: "eu" } },
+        { level: "likely", reason: "Healthcare sector with EU operations (essential entity under NIS2, verify size threshold)", conditions: { industry: "healthcare", operating_regions_includes: "eu" } },
+        { level: "likely", reason: "Financial services with EU operations (essential entity under NIS2, verify size threshold)", conditions: { industry: "financial_services", operating_regions_includes: "eu" } },
+        { level: "likely", reason: "Technology / ICT service management with EU operations (essential entity under NIS2, verify size threshold)", conditions: { industry: "technology", operating_regions_includes: "eu" } },
+        { level: "likely", reason: "Manufacturing with EU operations (potentially important entity under NIS2, verify size threshold)", conditions: { industry: "manufacturing", operating_regions_includes: "eu" } },
+        { level: "likely", reason: "Government / public administration with EU operations (essential entity under NIS2, verify size threshold)", conditions: { industry: "government", operating_regions_includes: "eu" } }
       ],
       first_steps: [
         "Determine if you are an essential or important entity under your member state's transposition",
@@ -257,8 +263,8 @@ window.COMPLIANCE_DATA = {
       description: "California Consumer Privacy Act as amended by the California Privacy Rights Act. Applies to qualifying for-profit businesses handling California residents' personal information.",
       reference_url: "https://cppa.ca.gov/regulations/",
       evaluators: [
-        { level: "definite", reason: "Operations or customers in California", conditions: { us_states_includes: "ca" } },
-        { level: "likely", reason: "Revenue over $25M with California consumer data", conditions: { revenue_in: ["50m_250m", "over_250m"] } }
+        { level: "definite", reason: "California operations with revenue over $25M (meets CCPA scope threshold)", conditions: { us_states_includes: "ca", revenue_in: ["50m_250m", "over_250m"] } },
+        { level: "likely", reason: "Operations or customers in California (CCPA scope depends on revenue, consumer count, or data sale percentage)", conditions: { us_states_includes: "ca" } }
       ],
       first_steps: [
         "Update your privacy notice with required disclosures (categories, purposes, retention)",
