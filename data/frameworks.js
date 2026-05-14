@@ -279,18 +279,60 @@ window.COMPLIANCE_DATA = {
       id: "ny_dfs_500",
       name: "NY DFS 23 NYCRR Part 500",
       category: "US State · Financial Services (New York)",
-      description: "New York Department of Financial Services cybersecurity regulation. Applies directly only to Covered Entities: persons or entities operating under a DFS-issued license, charter, or similar authorization under NY Banking, Insurance, or Financial Services Law (banks, insurers, mortgage brokers, money transmitters, virtual currency businesses, etc.). Third-party service providers of Covered Entities are not directly subject to Part 500, though they typically face contractual security requirements flowing down from their Covered Entity clients under Section 500.11.",
+      description: "New York Department of Financial Services cybersecurity regulation. Applies directly only to Covered Entities: persons or entities operating under a DFS-issued license, charter, or similar authorization under NY Banking, Insurance, or Financial Services Law (banks, insurers, mortgage brokers, money transmitters, virtual currency businesses, etc.). The 2023 Second Amendment categorizes Covered Entities into three tiers: Class A (large entities with enhanced requirements), Standard, and Limited Exemption (smaller entities exempt from certain provisions). Third-party service providers of Covered Entities are not directly subject to Part 500, though they typically face contractual security requirements flowing down from their Covered Entity clients under Section 500.11.",
       reference_url: "https://www.dfs.ny.gov/industry_guidance/cybersecurity",
+      suppressed_by: ["ny_dfs_500_limited_exemption"],
       evaluators: [
         { level: "definite", reason: "Industry is financial services with New York operations", conditions: { industry: "financial_services", us_states_includes: "ny" } },
         { level: "definite", reason: "Industry is insurance with New York operations", conditions: { industry: "insurance", us_states_includes: "ny" } }
       ],
       first_steps: [
+        "Determine Part 500 classification: Class A (Section 500.1(d)), Standard, or Limited Exemption (Section 500.19)",
         "Designate a CISO with reporting line to senior management or board",
         "Implement a written cybersecurity program based on documented risk assessment",
         "Conduct annual penetration testing and bi-annual vulnerability assessments",
-        "Require MFA on all access (with limited documented exceptions)",
+        "Require MFA on all access (with limited documented exceptions, deadline November 2025)",
         "File annual certification of compliance with DFS by April 15"
+      ]
+    },
+
+    {
+      id: "ny_dfs_500_class_a",
+      name: "NY DFS Part 500 - Class A Company Enhanced Requirements",
+      category: "US State · Financial Services (New York)",
+      description: "Enhanced requirements under 23 NYCRR Part 500 for Class A Companies (Section 500.1(d)). A Covered Entity is Class A if it has at least $20 million in gross annual revenue in each of the last two fiscal years from NY business operations, AND either (a) more than 2,000 employees averaged over the last two fiscal years (including global affiliates that share cybersecurity programs), or (b) more than $1 billion in gross annual revenue in each of the last two fiscal years from global business operations. Class A obligations include annual independent cybersecurity audits, privileged access management solutions, endpoint detection and response, and automated blocking of commonly-used passwords.",
+      reference_url: "https://www.dfs.ny.gov/industry_guidance/cybersecurity",
+      evaluators: [
+        { level: "definite", reason: "Large NY financial services entity (over 1,000 employees) - likely meets Class A thresholds; verify $20M+ NY revenue and 2,000+ employees or $1B+ global revenue", conditions: { industry: "financial_services", us_states_includes: "ny", employees_in: ["over_1000"] } },
+        { level: "definite", reason: "Large NY insurance entity (over 1,000 employees) - likely meets Class A thresholds; verify $20M+ NY revenue and 2,000+ employees or $1B+ global revenue", conditions: { industry: "insurance", us_states_includes: "ny", employees_in: ["over_1000"] } },
+        { level: "definite", reason: "Large NY financial services entity (over $250M revenue) - likely meets Class A thresholds; verify $1B+ global revenue", conditions: { industry: "financial_services", us_states_includes: "ny", revenue_in: ["over_250m"] } },
+        { level: "definite", reason: "Large NY insurance entity (over $250M revenue) - likely meets Class A thresholds; verify $1B+ global revenue", conditions: { industry: "insurance", us_states_includes: "ny", revenue_in: ["over_250m"] } }
+      ],
+      first_steps: [
+        "Conduct annual independent audit of the cybersecurity program (Section 500.2(c)) - internal or external auditor with documented independence",
+        "Implement a privileged access management (PAM) solution covering all privileged accounts",
+        "Implement an automated method of blocking commonly-used passwords for company-controlled accounts",
+        "Deploy endpoint detection and response (EDR) tools with centralized logging and alerting (Section 500.14(b))",
+        "Maintain documentation supporting Class A classification and enhanced controls for the five-year record retention requirement"
+      ]
+    },
+
+    {
+      id: "ny_dfs_500_limited_exemption",
+      name: "NY DFS Part 500 - Limited Exemption Eligibility",
+      category: "US State · Financial Services (New York)",
+      description: "Smaller Covered Entities may qualify for limited exemption under Section 500.19(a). To qualify, the entity (including affiliates) must meet ALL THREE criteria: fewer than 20 employees and independent contractors, less than $7.5 million in gross annual revenue in each of the last three fiscal years from NY business operations, and less than $15 million in year-end total assets. Qualifying entities must file a Notice of Exemption through the DFS Portal. Limited Exemption entities are exempt from several sections including CISO designation (500.4(a)), independent audit, penetration testing (500.5(a)(1)), application security (500.8), monitoring (500.14(b)), and training (500.14(a)(3)) but must still comply with core sections including cybersecurity program, risk assessment, MFA, encryption, breach reporting, access privileges, and annual certification.",
+      reference_url: "https://www.dfs.ny.gov/industry_guidance/cybersecurity",
+      evaluators: [
+        { level: "definite", reason: "Small NY financial services entity (under 50 employees, under $10M revenue) - may qualify for Limited Exemption; verify under 20 employees, under $7.5M NY revenue (3-year history), and under $15M total assets", conditions: { industry: "financial_services", us_states_includes: "ny", employees_in: ["1_50"], revenue_in: ["under_1m", "1m_10m"] } },
+        { level: "definite", reason: "Small NY insurance entity (under 50 employees, under $10M revenue) - may qualify for Limited Exemption; verify under 20 employees, under $7.5M NY revenue (3-year history), and under $15M total assets", conditions: { industry: "insurance", us_states_includes: "ny", employees_in: ["1_50"], revenue_in: ["under_1m", "1m_10m"] } }
+      ],
+      first_steps: [
+        "Verify all three exemption criteria: fewer than 20 employees and contractors (including affiliates), under $7.5M NY revenue in each of the last 3 fiscal years, under $15M year-end total assets",
+        "File Notice of Exemption through the DFS Portal",
+        "Comply with non-exempted core sections: cybersecurity program (500.2), policy (500.3), risk assessment (500.9), MFA (500.12), encryption (500.15), access privileges (500.7), breach reporting (500.17(a)), and certification (500.17(b))",
+        "Document basis for the exemption claim and maintain supporting evidence for the five-year record retention requirement",
+        "Reassess exemption eligibility annually - business growth may push the entity out of Limited Exemption into Standard tier"
       ]
     },
 

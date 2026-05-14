@@ -1017,7 +1017,7 @@ a:hover {
 
 @page {
   size: letter;
-  margin: 0.6in 0.7in;
+  margin: 0;
 }
 
 @media print {
@@ -1031,6 +1031,13 @@ a:hover {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     text-rendering: geometricPrecision;
+    padding: 1in 0.85in !important;
+    margin: 0 !important;
+  }
+
+  html {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Hide all chrome */
@@ -1205,8 +1212,20 @@ a:hover {
   }
 
   .framework-meta a {
-    color: #5C5759;
+    color: #0086B7;
     border: none;
+    text-decoration: underline;
+    font-weight: 500;
+  }
+
+  /* Show URL inline so it's accessible on paper / non-clickable PDFs */
+  .framework-meta a[href]::after {
+    content: " (" attr(href) ")";
+    color: #5C5759;
+    font-weight: 400;
+    text-decoration: none;
+    font-size: 8pt;
+    word-break: break-all;
   }
 
   .framework-desc {

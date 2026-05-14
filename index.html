@@ -147,7 +147,7 @@
 
         <div class="field conditional" data-field="revenue">
           <label class="field-label" for="revenue">Annual revenue (USD)</label>
-          <p class="field-help">Showing because California is selected (used for CCPA scope thresholds).</p>
+          <p class="field-help">Used for state-specific compliance scoping (CCPA threshold, NY DFS Part 500 tier classification).</p>
           <select id="revenue" name="revenue" class="control">
             <option value="">Select a range</option>
             <option value="under_1m">Under $1M</option>
@@ -160,7 +160,7 @@
 
         <div class="field conditional" data-field="employees">
           <label class="field-label" for="employees">Employee count</label>
-          <p class="field-help">Showing because EU or Texas is selected (used for NIS2 scope and Texas safe harbor).</p>
+          <p class="field-help">Used for compliance scope determination (NIS2 size threshold, NY DFS Class A determination, Texas safe harbor scope).</p>
           <select id="employees" name="employees" class="control">
             <option value="">Select a range</option>
             <option value="1_50">1 to 50</option>
@@ -340,7 +340,9 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="data/frameworks.js"></script>
 <script src="app.js"></script>
+<script src="pdf.js"></script>
 </body>
 </html>

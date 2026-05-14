@@ -64,13 +64,15 @@
     },
     revenue: {
       show_when: [
-        { us_states_includes: 'ca' }
+        { us_states_includes: 'ca' },
+        { us_states_includes: 'ny', industry_in: ['financial_services', 'insurance'] }
       ]
     },
     employees: {
       show_when: [
         { operating_regions_includes: 'eu' },
-        { us_states_includes: 'tx' }
+        { us_states_includes: 'tx' },
+        { us_states_includes: 'ny', industry_in: ['financial_services', 'insurance'] }
       ]
     },
     contracts: {
@@ -99,28 +101,31 @@
   };
 
   function checkCondition(condition, data) {
-    if ('industry_in' in condition) {
-      return condition.industry_in.indexOf(data.industry) !== -1;
+    // All keys in the condition must match (AND logic across keys)
+    var keys = Object.keys(condition);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var expected = condition[key];
+
+      if (key === 'industry_in') {
+        if (expected.indexOf(data.industry) === -1) return false;
+      } else if (key === 'industry') {
+        if (data.industry !== expected) return false;
+      } else if (key === 'data_types_includes') {
+        if (!Array.isArray(data.data_types) || data.data_types.indexOf(expected) === -1) return false;
+      } else if (key === 'customer_types_includes_any') {
+        if (!Array.isArray(data.customer_types) ||
+            !expected.some(function (v) { return data.customer_types.indexOf(v) !== -1; })) return false;
+      } else if (key === 'operating_regions_includes') {
+        if (!Array.isArray(data.operating_regions) || data.operating_regions.indexOf(expected) === -1) return false;
+      } else if (key === 'us_states_includes') {
+        if (!Array.isArray(data.us_states) || data.us_states.indexOf(expected) === -1) return false;
+      } else {
+        // Unknown condition key
+        return false;
+      }
     }
-    if ('data_types_includes' in condition) {
-      return Array.isArray(data.data_types) &&
-        data.data_types.indexOf(condition.data_types_includes) !== -1;
-    }
-    if ('customer_types_includes_any' in condition) {
-      return Array.isArray(data.customer_types) &&
-        condition.customer_types_includes_any.some(function (v) {
-          return data.customer_types.indexOf(v) !== -1;
-        });
-    }
-    if ('operating_regions_includes' in condition) {
-      return Array.isArray(data.operating_regions) &&
-        data.operating_regions.indexOf(condition.operating_regions_includes) !== -1;
-    }
-    if ('us_states_includes' in condition) {
-      return Array.isArray(data.us_states) &&
-        data.us_states.indexOf(condition.us_states_includes) !== -1;
-    }
-    return false;
+    return true;
   }
 
   function shouldShowField(fieldName, data) {
@@ -384,7 +389,8 @@
     if (grouped.consider.length) html += '<span><strong>' + grouped.consider.length + '</strong> recommended</span>';
     html += '</div>';
     html += '<div class="results-actions">';
-    html += '<button type="button" class="btn btn-ghost btn-small" onclick="window.print()">Print / Save as PDF</button>';
+    html += '<button type="button" class="btn btn-primary btn-small" onclick="window.downloadProfilePDF()">Download PDF</button>';
+    html += '<button type="button" class="btn btn-ghost btn-small" onclick="window.print()">Print</button>';
     html += '<button type="button" class="btn btn-ghost btn-small" onclick="window.copyShareLink(this)">Copy share link</button>';
     html += '</div>';
     html += '</div>';
@@ -581,6 +587,14 @@
       .map(function (fw) { return evaluateFramework(fw, data); })
       .filter(function (m) { return m !== null; });
 
+    // Apply suppression: if a framework declares `suppressed_by: [...]` and any of those IDs are in the matches, drop it.
+    var matchIds = matches.map(function (m) { return m.framework.id; });
+    matches = matches.filter(function (m) {
+      var suppressors = m.framework.suppressed_by;
+      if (!Array.isArray(suppressors) || !suppressors.length) return true;
+      return !suppressors.some(function (id) { return matchIds.indexOf(id) !== -1; });
+    });
+
     var tierOrder = { definite: 0, likely: 1, consider: 2 };
     matches.sort(function (a, b) {
       if (tierOrder[a.tier] !== tierOrder[b.tier]) {
@@ -591,8 +605,9 @@
 
     renderResults(matches, clientName, mspName);
 
-    // Store for post-render button handlers (share link)
+    // Store for post-render button handlers (share link, PDF download)
     lastResults = { matches: matches, clientName: clientName, mspName: mspName };
+    window.lastProfileResults = lastResults;
 
     // Update URL hash so the profile is shareable
     updateUrlHash(data);
@@ -626,6 +641,7 @@
       updateConditionalFields(form);
       resetPlaceholder();
       lastResults = { matches: [], clientName: '', mspName: '' };
+      window.lastProfileResults = lastResults;
       clearUrlHash();
     }, 0);
   }
