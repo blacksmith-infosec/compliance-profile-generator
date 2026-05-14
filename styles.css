@@ -642,11 +642,6 @@ a:hover {
 .actions {
   display: flex;
   gap: var(--space-3);
-  position: sticky;
-  bottom: var(--space-4);
-  background: var(--bg);
-  padding: var(--space-3) 0;
-  z-index: 10;
   margin-top: var(--space-2);
 }
 

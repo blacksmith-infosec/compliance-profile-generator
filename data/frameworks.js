@@ -423,6 +423,24 @@ window.COMPLIANCE_DATA = {
     },
 
     {
+      id: "gtia_cybersecurity_trustmark",
+      name: "GTIA Cybersecurity Trustmark",
+      category: "Voluntary · MSP / MSSP",
+      description: "Maturity-model assurance program designed specifically for IT service providers (MSPs and MSSPs) by the Global Technology Industry Association (formerly CompTIA Community). Foundationally based on the CIS Controls Implementation Group 2 (IG2) and supplemented by safeguards drawn from multiple globally recognized frameworks, the Trustmark addresses controls unique to the ITSP risk model. Demonstrates ongoing cybersecurity maturity to customers, cyber insurers, and partners. Achieved through assessment by a CREST-accredited assessor. Requires GTIA membership and a subscription to an approved GRC platform.",
+      reference_url: "https://gtia.org/membership/cybersecurity-programs/trustmark",
+      evaluators: [
+        { level: "consider", reason: "Operating as an MSP / MSSP (industry trust mark designed specifically for IT service providers)", conditions: { provider_role_includes: "msp" } }
+      ],
+      first_steps: [
+        "Join GTIA and submit the Cybersecurity Trustmark interest form",
+        "Subscribe to an approved GRC platform (program prerequisite)",
+        "Implement CIS Controls IG2 as the foundational control baseline",
+        "Work through the 24-month Readiness Program safeguards (typical completion in ~10 months)",
+        "Engage a CREST-accredited assessor through GTIA for the formal assessment"
+      ]
+    },
+
+    {
       id: "ny_shield",
       name: "NY SHIELD Act",
       category: "US State · Privacy and Breach (New York)",
