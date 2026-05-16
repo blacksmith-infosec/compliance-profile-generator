@@ -595,6 +595,15 @@
       return !suppressors.some(function (id) { return matchIds.indexOf(id) !== -1; });
     });
 
+    // Apply baseline suppression: if any framework flagged `is_baseline: true` fires at definite
+    // or likely tier, drop generic baselines flagged `suppressed_by_baseline: true` (e.g., CIS, NIST CSF).
+    var baselineApplies = matches.some(function (m) {
+      return m.framework.is_baseline && (m.tier === 'definite' || m.tier === 'likely');
+    });
+    if (baselineApplies) {
+      matches = matches.filter(function (m) { return !m.framework.suppressed_by_baseline; });
+    }
+
     var tierOrder = { definite: 0, likely: 1, consider: 2 };
     matches.sort(function (a, b) {
       if (tierOrder[a.tier] !== tierOrder[b.tier]) {

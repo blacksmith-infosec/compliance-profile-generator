@@ -76,6 +76,7 @@ window.COMPLIANCE_DATA = {
       category: "Voluntary · General",
       description: "Risk-based framework structured around six functions (Govern, Identify, Protect, Detect, Respond, Recover). Widely used as a baseline by organizations of all sizes and adopted as a reference by many sector regulators.",
       reference_url: "https://www.nist.gov/cyberframework",
+      suppressed_by_baseline: true,
       evaluators: [
         { level: "consider", reason: "Recommended as a foundational cybersecurity framework for organizations of any size or sector", conditions: {} }
       ],
@@ -91,15 +92,14 @@ window.COMPLIANCE_DATA = {
     {
       id: "nist_800_171",
       name: "NIST SP 800-171",
-      category: "US Federal · Defense / Contractors",
-      description: "Security requirements for protecting Controlled Unclassified Information in non-federal systems. Required by DFARS and various FAR clauses for contractors handling CUI.",
+      category: "US Federal · Civilian Contractors",
+      description: "Security requirements for protecting Controlled Unclassified Information in non-federal systems. Required by various FAR and agency-specific clauses for federal civilian contractors handling CUI. DoD contractors handling CUI should follow CMMC, which incorporates the 800-171 controls along with assessment requirements.",
       reference_url: "https://csrc.nist.gov/pubs/sp/800/171/r3/final",
+      is_baseline: true,
       evaluators: [
-        { level: "definite", reason: "Handles Controlled Unclassified Information", conditions: { data_types_includes: "cui" } },
-        { level: "definite", reason: "Subject to DFARS 252.204-7012 / 7019 / 7020", conditions: { contracts_includes: "dfars" } },
+        { level: "definite", reason: "Federal civilian customer with CUI handling triggers NIST 800-171 compliance under FAR and agency-specific clauses (GSA, NASA, HHS, etc.)", conditions: { customer_types_includes: "federal_civilian", data_types_includes: "cui" } },
         { level: "definite", reason: "FAR contracts require NIST SP 800-171", conditions: { contracts_includes: "far_171" } },
-        { level: "likely", reason: "Industry is defense industrial base", conditions: { industry: "defense" } },
-        { level: "likely", reason: "Customers include the US Department of Defense", conditions: { customer_types_includes: "dod" } }
+        { level: "likely", reason: "Federal civilian customer relationships frequently involve CUI handling under various FAR clauses", conditions: { customer_types_includes: "federal_civilian" } }
       ],
       first_steps: [
         "Complete a System Security Plan (SSP) documenting all applicable controls",
@@ -116,6 +116,7 @@ window.COMPLIANCE_DATA = {
       category: "US Federal · DoD Contractors",
       description: "Cybersecurity Maturity Model Certification. Level 1 (FCI, self-assessment), Level 2 (CUI, third-party assessment for most), Level 3 (DIBCAC). Phased rollout into DoD contracts beginning 2025.",
       reference_url: "https://dodcio.defense.gov/CMMC/",
+      is_baseline: true,
       evaluators: [
         { level: "definite", reason: "Subject to DFARS 252.204-7021 (CMMC clause)", conditions: { contracts_includes: "dfars" } },
         { level: "definite", reason: "Customers include the US Department of Defense", conditions: { customer_types_includes: "dod" } },
@@ -159,6 +160,7 @@ window.COMPLIANCE_DATA = {
       category: "International · Certification",
       description: "International standard for information security management systems (ISMS). Often required by international customers and a common alternative or complement to SOC 2.",
       reference_url: "https://www.iso.org/standard/27001",
+      is_baseline: true,
       evaluators: [
         { level: "definite", reason: "Customers require ISO 27001 certification", conditions: { contracts_includes: "iso27001" } },
         { level: "likely", reason: "Operations or customers in EU / EEA", conditions: { operating_regions_includes: "eu" } },
@@ -281,6 +283,7 @@ window.COMPLIANCE_DATA = {
       category: "US State · Financial Services (New York)",
       description: "New York Department of Financial Services cybersecurity regulation. Applies directly only to Covered Entities: persons or entities operating under a DFS-issued license, charter, or similar authorization under NY Banking, Insurance, or Financial Services Law (banks, insurers, mortgage brokers, money transmitters, virtual currency businesses, etc.). The 2023 Second Amendment categorizes Covered Entities into three tiers: Class A (large entities with enhanced requirements), Standard, and Limited Exemption (smaller entities exempt from certain provisions). Third-party service providers of Covered Entities are not directly subject to Part 500, though they typically face contractual security requirements flowing down from their Covered Entity clients under Section 500.11.",
       reference_url: "https://www.dfs.ny.gov/industry_guidance/cybersecurity",
+      is_baseline: true,
       suppressed_by: ["ny_dfs_500_limited_exemption"],
       evaluators: [
         { level: "definite", reason: "Industry is financial services with New York operations", conditions: { industry: "financial_services", us_states_includes: "ny" } },
@@ -302,6 +305,7 @@ window.COMPLIANCE_DATA = {
       category: "US State · Financial Services (New York)",
       description: "Enhanced requirements under 23 NYCRR Part 500 for Class A Companies (Section 500.1(d)). A Covered Entity is Class A if it has at least $20 million in gross annual revenue in each of the last two fiscal years from NY business operations, AND either (a) more than 2,000 employees averaged over the last two fiscal years (including global affiliates that share cybersecurity programs), or (b) more than $1 billion in gross annual revenue in each of the last two fiscal years from global business operations. Class A obligations include annual independent cybersecurity audits, privileged access management solutions, endpoint detection and response, and automated blocking of commonly-used passwords.",
       reference_url: "https://www.dfs.ny.gov/industry_guidance/cybersecurity",
+      is_baseline: true,
       evaluators: [
         { level: "definite", reason: "Large NY financial services entity (over 1,000 employees) - likely meets Class A thresholds; verify $20M+ NY revenue and 2,000+ employees or $1B+ global revenue", conditions: { industry: "financial_services", us_states_includes: "ny", employees_in: ["over_1000"] } },
         { level: "definite", reason: "Large NY insurance entity (over 1,000 employees) - likely meets Class A thresholds; verify $20M+ NY revenue and 2,000+ employees or $1B+ global revenue", conditions: { industry: "insurance", us_states_includes: "ny", employees_in: ["over_1000"] } },
@@ -458,6 +462,7 @@ window.COMPLIANCE_DATA = {
       category: "Voluntary · General",
       description: "Prioritized set of cybersecurity actions organized into 18 control groups, with implementation groups (IG1, IG2, IG3) scaled to organization size and risk. Widely used as a practical baseline.",
       reference_url: "https://www.cisecurity.org/controls",
+      suppressed_by_baseline: true,
       evaluators: [
         { level: "consider", reason: "Recommended as a practical implementation baseline alongside any required framework", conditions: {} }
       ],
