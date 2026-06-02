@@ -53,6 +53,79 @@
   }
 
   // -----------------------------------------------------------------
+  // BUSINESS TYPE TO INDUSTRY MAPPING
+  // -----------------------------------------------------------------
+  // The form asks for a specific business type (e.g., "CPA firm",
+  // "medical practice") which is unambiguous for end users. Internally
+  // we map to the existing `industry` values used by framework triggers.
+  // Multiple business types may map to the same industry value.
+
+  var BUSINESS_TYPE_TO_INDUSTRY = {
+    // Accounting & Finance
+    cpa_firm: 'financial_services',
+    tax_prep: 'financial_services',
+    investment_advisor: 'financial_services',
+    bank_credit_union: 'financial_services',
+    mortgage_broker: 'financial_services',
+    insurance_agency: 'insurance',
+    fintech: 'financial_services',
+
+    // Healthcare
+    medical_practice: 'healthcare',
+    dental_practice: 'healthcare',
+    veterinary_practice: 'professional_services',
+    mental_health: 'healthcare',
+    pharmacy: 'healthcare',
+    healthcare_it: 'healthcare',
+    health_insurance: 'insurance',
+    pharma_biotech: 'healthcare',
+
+    // Legal
+    law_firm: 'legal',
+
+    // Education
+    k12_school: 'education',
+    higher_ed: 'education',
+
+    // Government & Public Sector
+    federal_civilian_contractor: 'government',
+    defense_contractor: 'defense',
+    state_local_government: 'government',
+    nonprofit: 'nonprofit',
+
+    // Technology
+    saas: 'technology',
+    msp_services: 'technology',
+    cybersecurity_vendor: 'technology',
+    other_technology: 'technology',
+
+    // Retail & Hospitality
+    retail_store: 'retail',
+    ecommerce: 'retail',
+    restaurant: 'hospitality',
+    hotel: 'hospitality',
+
+    // Real Estate
+    real_estate_brokerage: 'real_estate',
+    property_management: 'real_estate',
+
+    // Professional Services
+    consulting: 'professional_services',
+    marketing_agency: 'professional_services',
+    architecture_engineering: 'professional_services',
+    recruiting_staffing: 'professional_services',
+
+    // Industrial
+    manufacturing: 'manufacturing',
+    construction: 'manufacturing',
+    energy: 'energy',
+    transportation: 'manufacturing',
+
+    // Other
+    other: 'other'
+  };
+
+  // -----------------------------------------------------------------
   // CONDITIONAL FIELD VISIBILITY
   // -----------------------------------------------------------------
 
@@ -207,6 +280,12 @@
         .map(function (el) { return el.value; });
     });
 
+    // Derive `industry` from `business_type` so existing framework triggers
+    // (which reference industry) keep working unchanged.
+    if (data.business_type && BUSINESS_TYPE_TO_INDUSTRY[data.business_type]) {
+      data.industry = BUSINESS_TYPE_TO_INDUSTRY[data.business_type];
+    }
+
     return data;
   }
 
@@ -272,7 +351,7 @@
       return 'Please select at least one operating region in section 1 before generating.';
     }
 
-    var requiredAlways = ['industry', 'public_status'];
+    var requiredAlways = ['business_type', 'public_status'];
     for (var i = 0; i < requiredAlways.length; i++) {
       var f = requiredAlways[i];
       if (!data[f]) {
@@ -460,7 +539,7 @@
   // SHAREABLE URL (encode/decode profile via base64 in hash)
   // -----------------------------------------------------------------
 
-  var SCHEMA_VERSION = 1;
+  var SCHEMA_VERSION = 2;
 
   function encodeProfileToHash(data) {
     var payload = { v: SCHEMA_VERSION, profile: data };

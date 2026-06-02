@@ -122,25 +122,70 @@
           <span class="section-title">Organization</span>
         </legend>
 
-        <div class="field" data-field="industry">
-          <label class="field-label" for="industry">Primary industry</label>
-          <select id="industry" name="industry" class="control">
-            <option value="">Select an industry</option>
-            <option value="healthcare">Healthcare and life sciences</option>
-            <option value="financial_services">Financial services</option>
-            <option value="defense">Defense industrial base</option>
-            <option value="retail">Retail and e-commerce</option>
-            <option value="education">Education</option>
-            <option value="government">Government (state, local, tribal)</option>
-            <option value="technology">Technology and SaaS</option>
-            <option value="manufacturing">Manufacturing</option>
-            <option value="professional_services">Professional services</option>
-            <option value="energy">Energy and utilities</option>
-            <option value="legal">Legal</option>
-            <option value="insurance">Insurance</option>
-            <option value="hospitality">Hospitality and travel</option>
-            <option value="real_estate">Real estate</option>
-            <option value="nonprofit">Nonprofit</option>
+        <div class="field" data-field="business_type">
+          <label class="field-label" for="business_type">Type of business</label>
+          <select id="business_type" name="business_type" class="control">
+            <option value="">Select a business type</option>
+            <optgroup label="Accounting &amp; Finance">
+              <option value="cpa_firm">Accounting / CPA firm</option>
+              <option value="tax_prep">Tax preparation</option>
+              <option value="investment_advisor">Investment advisor / RIA / wealth management</option>
+              <option value="bank_credit_union">Bank / credit union</option>
+              <option value="mortgage_broker">Mortgage broker / lender</option>
+              <option value="insurance_agency">Insurance agency / brokerage</option>
+              <option value="fintech">Fintech / payment processor</option>
+            </optgroup>
+            <optgroup label="Healthcare">
+              <option value="medical_practice">Medical practice</option>
+              <option value="dental_practice">Dental practice</option>
+              <option value="veterinary_practice">Veterinary practice</option>
+              <option value="mental_health">Mental / behavioral health practice</option>
+              <option value="pharmacy">Pharmacy</option>
+              <option value="healthcare_it">Healthcare IT / health tech vendor</option>
+              <option value="health_insurance">Health insurance / health plan</option>
+              <option value="pharma_biotech">Pharmaceutical / biotech / medical device</option>
+            </optgroup>
+            <optgroup label="Legal">
+              <option value="law_firm">Law firm</option>
+            </optgroup>
+            <optgroup label="Education">
+              <option value="k12_school">K-12 school / district</option>
+              <option value="higher_ed">Higher education (college, university)</option>
+            </optgroup>
+            <optgroup label="Government &amp; Public Sector">
+              <option value="federal_civilian_contractor">Federal civilian contractor</option>
+              <option value="defense_contractor">Defense contractor / defense industrial base</option>
+              <option value="state_local_government">State / local / tribal government</option>
+              <option value="nonprofit">Nonprofit</option>
+            </optgroup>
+            <optgroup label="Technology">
+              <option value="saas">SaaS / software company</option>
+              <option value="msp_services">MSP / MSSP / IT services</option>
+              <option value="cybersecurity_vendor">Cybersecurity vendor</option>
+              <option value="other_technology">Other technology</option>
+            </optgroup>
+            <optgroup label="Retail &amp; Hospitality">
+              <option value="retail_store">Retail store / chain</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="restaurant">Restaurant / food service</option>
+              <option value="hotel">Hotel / hospitality</option>
+            </optgroup>
+            <optgroup label="Real Estate">
+              <option value="real_estate_brokerage">Real estate brokerage</option>
+              <option value="property_management">Property management</option>
+            </optgroup>
+            <optgroup label="Professional Services">
+              <option value="consulting">Consulting firm</option>
+              <option value="marketing_agency">Marketing / advertising / PR</option>
+              <option value="architecture_engineering">Architecture / engineering</option>
+              <option value="recruiting_staffing">Recruiting / staffing</option>
+            </optgroup>
+            <optgroup label="Industrial">
+              <option value="manufacturing">Manufacturing</option>
+              <option value="construction">Construction</option>
+              <option value="energy">Energy / utilities</option>
+              <option value="transportation">Transportation / logistics</option>
+            </optgroup>
             <option value="other">Other</option>
           </select>
         </div>
