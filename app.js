@@ -126,6 +126,59 @@
   };
 
   // -----------------------------------------------------------------
+  // DATA TYPE RELEVANCE BY BUSINESS TYPE
+  // -----------------------------------------------------------------
+  // Maps each conditional data type to the list of narrow-scope business
+  // types where it's likely relevant. Data types not listed here (PII,
+  // financial, none) are always shown. Broad-scope business types (see
+  // BROAD_SCOPE_BUSINESS_TYPES below) bypass this filter entirely because
+  // they can plausibly touch any data type depending on clients/engagement.
+  // A "Show all data types" toggle in the form also bypasses this filter.
+
+  var DATA_TYPE_RELEVANCE = {
+    phi: [
+      'medical_practice', 'dental_practice', 'mental_health', 'pharmacy',
+      'healthcare_it', 'health_insurance', 'pharma_biotech',
+      'k12_school', 'higher_ed'
+    ],
+    cui: [
+      'federal_civilian_contractor', 'defense_contractor',
+      'architecture_engineering', 'construction', 'manufacturing'
+    ],
+    fci: [
+      'federal_civilian_contractor', 'defense_contractor',
+      'architecture_engineering', 'construction', 'manufacturing'
+    ],
+    student: ['k12_school', 'higher_ed'],
+    children: [
+      'medical_practice', 'dental_practice', 'mental_health', 'pharmacy',
+      'k12_school', 'higher_ed',
+      'retail_store', 'ecommerce', 'restaurant', 'insurance_agency'
+    ],
+    biometric: [
+      'medical_practice', 'dental_practice', 'mental_health',
+      'healthcare_it', 'health_insurance',
+      'bank_credit_union', 'fintech',
+      'retail_store', 'ecommerce', 'hotel',
+      'recruiting_staffing', 'energy', 'transportation', 'manufacturing',
+      'cybersecurity_vendor'
+    ],
+    cji: [
+      'federal_civilian_contractor', 'defense_contractor',
+      'state_local_government'
+    ],
+    fti: ['cpa_firm', 'tax_prep', 'federal_civilian_contractor']
+  };
+
+  // Broad-scope business types touch many data type categories depending on
+  // their clients, engagements, or practice areas. For these, the filter is
+  // bypassed entirely (all data types shown).
+  var BROAD_SCOPE_BUSINESS_TYPES = [
+    'law_firm', 'consulting', 'msp_services', 'cybersecurity_vendor',
+    'other_technology', 'saas', 'state_local_government', 'nonprofit', 'other'
+  ];
+
+  // -----------------------------------------------------------------
   // CONDITIONAL FIELD VISIBILITY
   // -----------------------------------------------------------------
 
@@ -256,6 +309,34 @@
         el.classList.add('hidden-by-region');
         var input = el.querySelector('input');
         if (input && input.checked) input.checked = false;
+      }
+    });
+  }
+
+  // Hide conditional data type options that aren't relevant to the user's
+  // business type. PII, financial, and "None" are always shown. Broad-scope
+  // business types (law firm, MSP, consulting, etc.) and the "Show all"
+  // toggle both bypass this filter.
+  function updateBusinessTypeDataVisibility(form) {
+    var businessTypeEl = form.querySelector('[name="business_type"]');
+    var businessType = businessTypeEl ? businessTypeEl.value : '';
+    var showAllEl = form.querySelector('#show-all-data-types');
+    var showAll = showAllEl ? showAllEl.checked : false;
+
+    var bypass = showAll || !businessType ||
+      BROAD_SCOPE_BUSINESS_TYPES.indexOf(businessType) !== -1;
+
+    Object.keys(DATA_TYPE_RELEVANCE).forEach(function (dataType) {
+      var optionEl = form.querySelector('input[name="data_types"][value="' + dataType + '"]');
+      if (!optionEl) return;
+      var wrapper = optionEl.closest('.option');
+      if (!wrapper) return;
+
+      if (bypass || DATA_TYPE_RELEVANCE[dataType].indexOf(businessType) !== -1) {
+        wrapper.classList.remove('hidden-by-business-type');
+      } else {
+        wrapper.classList.add('hidden-by-business-type');
+        if (optionEl.checked) optionEl.checked = false;
       }
     });
   }
@@ -726,12 +807,339 @@
     var form = e.target;
     setTimeout(function () {
       updateRegionVisibility(form);
+      updateBusinessTypeDataVisibility(form);
       updateConditionalFields(form);
+      refreshAllSectionSummaries(form);
+      initSectionStates(form, false);
+      updateContinueButtonStates(form);
       resetPlaceholder();
       lastResults = { matches: [], clientName: '', mspName: '' };
       window.lastProfileResults = lastResults;
       clearUrlHash();
     }, 0);
+  }
+
+  // -----------------------------------------------------------------
+  // INIT
+  // -----------------------------------------------------------------
+
+  // -----------------------------------------------------------------
+  // PROGRESSIVE DISCLOSURE - section state management
+  // -----------------------------------------------------------------
+
+  function getSection(form, num) {
+    return form.querySelector('[data-section="' + num + '"]');
+  }
+
+  function setSectionState(section, state) {
+    section.classList.remove('active', 'collapsed', 'future');
+    section.classList.add(state);
+  }
+
+  function getOptionLabel(form, name, value) {
+    var sel = form.querySelector('select[name="' + name + '"] option[value="' + value + '"]');
+    if (sel) return sel.textContent.trim();
+    var input = form.querySelector('input[name="' + name + '"][value="' + value + '"]');
+    if (!input) return value;
+    var labelEl = input.closest('.option');
+    if (labelEl) {
+      var span = labelEl.querySelector('span');
+      if (span) return span.textContent.trim();
+    }
+    return value;
+  }
+
+  function stripParen(s) {
+    return s.replace(/\s*\(.+?\)/g, '').trim();
+  }
+
+  function getSectionSummary(form, num) {
+    var data = readForm(form);
+    var labels, parts;
+    switch (num) {
+      case 1:
+        var regions = data.operating_regions || [];
+        if (!regions.length) return '';
+        labels = regions.map(function (r) { return getOptionLabel(form, 'operating_regions', r); }).map(stripParen);
+        if (labels.length > 6) return labels.length + ' regions';
+        return labels.join(', ');
+      case 2:
+        parts = [];
+        if (data.business_type) parts.push(getOptionLabel(form, 'business_type', data.business_type));
+        if (data.public_status) parts.push(getOptionLabel(form, 'public_status', data.public_status));
+        return parts.join(' \u00B7 ');
+      case 3:
+        var types = data.data_types || [];
+        if (!types.length) return '';
+        labels = types.map(function (t) { return getOptionLabel(form, 'data_types', t); }).map(stripParen);
+        if (labels.length > 6) return labels.length + ' data types';
+        return labels.join(', ');
+      case 4:
+        var customers = data.customer_types || [];
+        var contracts = data.contracts || [];
+        var sum = '';
+        if (customers.length) {
+          var custLabels = customers.map(function (c) { return getOptionLabel(form, 'customer_types', c); }).map(stripParen);
+          if (custLabels.length > 6) sum += custLabels.length + ' customer types';
+          else sum += custLabels.join(', ');
+        }
+        if (contracts.length) {
+          sum += (sum ? ' \u00B7 ' : '') + contracts.length + (contracts.length === 1 ? ' contract' : ' contracts');
+        }
+        return sum;
+      case 5:
+        var roles = data.provider_role || [];
+        if (!roles.length) return '';
+        labels = roles.map(function (r) { return getOptionLabel(form, 'provider_role', r); }).map(stripParen);
+        if (labels.length > 6) return labels.length + ' roles';
+        return labels.join(', ');
+    }
+    return '';
+  }
+
+  function sectionHasAnswers(data, num) {
+    switch (num) {
+      case 1: return (data.operating_regions || []).length > 0;
+      case 2: return !!(data.business_type && data.public_status);
+      case 3: return (data.data_types || []).length > 0;
+      case 4: return (data.customer_types || []).length > 0 || (data.contracts || []).length > 0;
+      case 5: return (data.provider_role || []).length > 0;
+    }
+    return false;
+  }
+
+  function isSectionValid(form, num) {
+    // Only section 2 has required fields. Others are always valid (can advance without selections).
+    if (num === 2) {
+      var data = readForm(form);
+      return !!(data.business_type && data.public_status);
+    }
+    return true;
+  }
+
+  function refreshSectionSummary(form, num) {
+    var section = getSection(form, num);
+    if (!section) return;
+    var data = readForm(form);
+    if (sectionHasAnswers(data, num)) {
+      section.classList.add('complete');
+    } else {
+      section.classList.remove('complete');
+    }
+    var summarySpan = section.querySelector('.section-summary');
+    if (summarySpan) {
+      summarySpan.textContent = getSectionSummary(form, num);
+    }
+  }
+
+  function refreshAllSectionSummaries(form) {
+    for (var i = 1; i <= 5; i++) {
+      refreshSectionSummary(form, i);
+    }
+  }
+
+  function updateContinueButtonStates(form) {
+    // Only section 2 has required fields; its Continue button gates on those
+    var section2 = getSection(form, 2);
+    if (section2) {
+      var btn = section2.querySelector('.section-continue-btn');
+      if (btn) btn.disabled = !isSectionValid(form, 2);
+    }
+  }
+
+  function advanceFromSection(form, currentNum) {
+    if (!isSectionValid(form, currentNum)) return;
+    var current = getSection(form, currentNum);
+    var next = getSection(form, currentNum + 1);
+    if (current) {
+      setSectionState(current, 'collapsed');
+      refreshSectionSummary(form, currentNum);
+    }
+    if (next) {
+      setSectionState(next, 'active');
+      refreshSectionSummary(form, currentNum + 1);
+      setTimeout(function () {
+        next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }
+
+  function expandSection(form, section) {
+    var current = form.querySelector('.section.active');
+    if (current && current !== section) {
+      setSectionState(current, 'collapsed');
+      var curNum = parseInt(current.dataset.section, 10);
+      refreshSectionSummary(form, curNum);
+    }
+    setSectionState(section, 'active');
+    var num = parseInt(section.dataset.section, 10);
+    refreshSectionSummary(form, num);
+    setTimeout(function () {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
+  function initSectionStates(form, hasSharedProfile) {
+    if (hasSharedProfile) {
+      // URL hash carries answers - show all collapsed with summaries
+      for (var i = 1; i <= 5; i++) {
+        var s = getSection(form, i);
+        if (s) setSectionState(s, 'collapsed');
+      }
+    } else {
+      // Fresh: section 1 active, rest future
+      for (var j = 1; j <= 5; j++) {
+        var sj = getSection(form, j);
+        if (!sj) continue;
+        setSectionState(sj, j === 1 ? 'active' : 'future');
+      }
+    }
+    refreshAllSectionSummaries(form);
+  }
+
+  function initProgressiveDisclosure(form, hasSharedProfile) {
+    form.querySelectorAll('.section-legend').forEach(function (legend) {
+      legend.addEventListener('click', function (e) {
+        // Don't fire if user clicked something interactive inside the legend
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        var section = legend.closest('.section');
+        if (!section) return;
+        if (section.classList.contains('active')) {
+          setSectionState(section, 'collapsed');
+          refreshSectionSummary(form, parseInt(section.dataset.section, 10));
+        } else {
+          expandSection(form, section);
+        }
+      });
+    });
+
+    form.querySelectorAll('.section-continue-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        // Section 5's button is type="submit"; let form submit handler run
+        if (btn.type === 'submit') return;
+        var section = btn.closest('.section');
+        if (!section) return;
+        advanceFromSection(form, parseInt(section.dataset.section, 10));
+      });
+    });
+
+    initSectionStates(form, hasSharedProfile);
+    updateContinueButtonStates(form);
+  }
+
+  // -----------------------------------------------------------------
+  // LOGO UPLOAD (stored in localStorage, embedded in PDF)
+  // -----------------------------------------------------------------
+
+  var LOGO_STORAGE_KEY = 'blacksmith_msp_logo_v1';
+  var LOGO_ASPECT_KEY = 'blacksmith_msp_logo_aspect_v1';
+
+  function initLogoUpload() {
+    var uploadBtn = document.getElementById('logo-upload-btn');
+    var input = document.getElementById('logo-input');
+    var preview = document.getElementById('logo-preview');
+    var thumb = document.getElementById('logo-thumb');
+    var removeBtn = document.getElementById('logo-remove');
+    if (!uploadBtn || !input || !preview || !thumb || !removeBtn) return;
+
+    try {
+      var existing = localStorage.getItem(LOGO_STORAGE_KEY);
+      if (existing) {
+        thumb.src = existing;
+        preview.classList.remove('hidden');
+        uploadBtn.classList.add('hidden');
+      }
+    } catch (e) { /* localStorage may be blocked */ }
+
+    uploadBtn.addEventListener('click', function () { input.click(); });
+
+    input.addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 1024 * 1024) {
+        alert('Logo file is too large. Please use a file under 1 MB.');
+        input.value = '';
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        var dataUrl = ev.target.result;
+        if (file.type === 'image/svg+xml') {
+          svgToPng(dataUrl, function (pngDataUrl, aspect) {
+            storeLogo(pngDataUrl, aspect);
+          }, function (err) {
+            alert('Could not process SVG logo: ' + err);
+            input.value = '';
+          });
+        } else {
+          getImageAspect(dataUrl, function (aspect) {
+            storeLogo(dataUrl, aspect);
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    removeBtn.addEventListener('click', function () {
+      try {
+        localStorage.removeItem(LOGO_STORAGE_KEY);
+        localStorage.removeItem(LOGO_ASPECT_KEY);
+      } catch (e) { /* ignore */ }
+      thumb.src = '';
+      preview.classList.add('hidden');
+      uploadBtn.classList.remove('hidden');
+      input.value = '';
+    });
+
+    function storeLogo(dataUrl, aspect) {
+      try {
+        localStorage.setItem(LOGO_STORAGE_KEY, dataUrl);
+        localStorage.setItem(LOGO_ASPECT_KEY, String(aspect));
+        thumb.src = dataUrl;
+        preview.classList.remove('hidden');
+        uploadBtn.classList.add('hidden');
+      } catch (err) {
+        alert('Could not save logo. It may be too large for browser storage.');
+      }
+    }
+  }
+
+  function getImageAspect(dataUrl, callback) {
+    var img = new Image();
+    img.onload = function () {
+      var a = (img.naturalWidth && img.naturalHeight) ? img.naturalWidth / img.naturalHeight : 1;
+      callback(a);
+    };
+    img.onerror = function () { callback(1); };
+    img.src = dataUrl;
+  }
+
+  function svgToPng(svgDataUrl, callback, errorCallback) {
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var w = img.naturalWidth || 300;
+        var h = img.naturalHeight || 300;
+        var maxDim = 400;
+        if (w > maxDim || h > maxDim) {
+          var scale = Math.min(maxDim / w, maxDim / h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        callback(canvas.toDataURL('image/png'), w / h);
+      } catch (e) {
+        if (errorCallback) errorCallback(e.message || 'conversion failed');
+      }
+    };
+    img.onerror = function () {
+      if (errorCallback) errorCallback('SVG load failed');
+    };
+    img.src = svgDataUrl;
   }
 
   // -----------------------------------------------------------------
@@ -746,26 +1154,29 @@
       form.addEventListener('change', function (e) {
         enforceExclusiveNone(form, e);
         updateRegionVisibility(form);
+        updateBusinessTypeDataVisibility(form);
         updateConditionalFields(form);
+        refreshAllSectionSummaries(form);
+        updateContinueButtonStates(form);
       });
 
-      // Pre-fill from URL hash if present, before initial visibility passes
       var sharedProfile = decodeProfileFromHash();
       if (sharedProfile) {
         applyProfileToForm(form, sharedProfile);
       }
 
       updateRegionVisibility(form);
+      updateBusinessTypeDataVisibility(form);
       updateConditionalFields(form);
 
-      // If we restored from a shared link, auto-submit to render results
+      initLogoUpload();
+      initProgressiveDisclosure(form, !!sharedProfile);
+
       if (sharedProfile) {
-        // Defer one tick so visibility updates settle first
         setTimeout(function () {
           if (form.requestSubmit) {
             form.requestSubmit();
           } else {
-            // Older browsers
             var evt = new Event('submit', { cancelable: true, bubbles: true });
             form.dispatchEvent(evt);
           }

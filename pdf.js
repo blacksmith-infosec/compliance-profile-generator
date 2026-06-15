@@ -118,6 +118,34 @@
   // ---- Higher-level building blocks ---------------------------------
 
   function drawReportHeader(doc, state, clientName, mspName, total, grouped) {
+    // Optional MSP logo in top-right corner of first page
+    var logoData = null;
+    var logoAspect = 1;
+    try {
+      logoData = localStorage.getItem('blacksmith_msp_logo_v1');
+      var storedAspect = localStorage.getItem('blacksmith_msp_logo_aspect_v1');
+      if (storedAspect) logoAspect = parseFloat(storedAspect) || 1;
+    } catch (e) { /* localStorage unavailable */ }
+    if (logoData) {
+      try {
+        var maxSize = 56; // ~0.78 inch box
+        var logoW, logoH;
+        if (logoAspect >= 1) {
+          logoW = maxSize;
+          logoH = maxSize / logoAspect;
+        } else {
+          logoH = maxSize;
+          logoW = maxSize * logoAspect;
+        }
+        var logoX = PAGE_W - MARGIN_X - logoW;
+        var logoY = state.y;
+        // jsPDF auto-detects format from data URL
+        doc.addImage(logoData, logoX, logoY, logoW, logoH);
+      } catch (logoErr) {
+        console.warn('Failed to embed logo in PDF:', logoErr);
+      }
+    }
+
     // "BLACKSMITH INFOSEC" eyebrow
     setFont(doc, 'bold');
     doc.setFontSize(8.5);

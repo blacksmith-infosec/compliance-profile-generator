@@ -71,14 +71,29 @@
           <label class="profile-identifier-label" for="msp_name">Prepared by <span class="optional">(optional)</span></label>
           <input type="text" id="msp_name" name="msp_name" class="profile-identifier-input" placeholder="Your firm or MSP name" autocomplete="off" maxlength="100">
         </div>
+        <div class="profile-identifier-field profile-identifier-logo">
+          <label class="profile-identifier-label">Logo <span class="optional">(optional)</span></label>
+          <div class="logo-control">
+            <button type="button" class="btn btn-ghost btn-small logo-upload-btn" id="logo-upload-btn">Upload</button>
+            <input type="file" id="logo-input" accept="image/png,image/jpeg,image/svg+xml" style="display:none">
+            <div class="logo-preview hidden" id="logo-preview">
+              <img id="logo-thumb" alt="Uploaded logo">
+              <button type="button" class="logo-remove" id="logo-remove" aria-label="Remove logo">&times;</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- SECTION 1: WHERE YOU OPERATE -->
-      <fieldset class="section">
+      <fieldset class="section" data-section="1">
         <legend class="section-legend">
-          <span class="section-number">01<span class="section-dot">.</span></span>
-          <span class="section-title">Where you operate</span>
+          <span class="section-marker">
+            <span class="section-check" aria-hidden="true">&#10003;</span>
+            <span class="section-number">01<span class="section-dot">.</span></span>
+            <span class="section-title">Where you operate</span>
+          </span>
         </legend>
+        <div class="section-summary" aria-hidden="true"></div>
 
         <div class="field" data-field="operating_regions">
           <span class="field-label">Operating regions or data subjects</span>
@@ -113,14 +128,21 @@
             <label class="option"><input type="checkbox" name="us_states" value="other_us"> <span>Other US states</span></label>
           </div>
         </div>
+        <div class="section-continue">
+          <button type="button" class="btn btn-primary btn-small section-continue-btn">Continue</button>
+        </div>
       </fieldset>
 
       <!-- SECTION 2: ORGANIZATION -->
-      <fieldset class="section">
+      <fieldset class="section" data-section="2">
         <legend class="section-legend">
-          <span class="section-number">02<span class="section-dot">.</span></span>
-          <span class="section-title">Organization</span>
+          <span class="section-marker">
+            <span class="section-check" aria-hidden="true">&#10003;</span>
+            <span class="section-number">02<span class="section-dot">.</span></span>
+            <span class="section-title">Organization</span>
+          </span>
         </legend>
+        <div class="section-summary" aria-hidden="true"></div>
 
         <div class="field" data-field="business_type">
           <label class="field-label" for="business_type">Type of business</label>
@@ -223,14 +245,21 @@
             <label class="option"><input type="radio" name="public_status" value="public"> <span>Publicly traded (US exchange)</span></label>
           </div>
         </div>
+        <div class="section-continue">
+          <button type="button" class="btn btn-primary btn-small section-continue-btn">Continue</button>
+        </div>
       </fieldset>
 
       <!-- SECTION 3: DATA -->
-      <fieldset class="section">
+      <fieldset class="section" data-section="3">
         <legend class="section-legend">
-          <span class="section-number">03<span class="section-dot">.</span></span>
-          <span class="section-title">Data handled</span>
+          <span class="section-marker">
+            <span class="section-check" aria-hidden="true">&#10003;</span>
+            <span class="section-number">03<span class="section-dot">.</span></span>
+            <span class="section-title">Data handled</span>
+          </span>
         </legend>
+        <div class="section-summary" aria-hidden="true"></div>
 
         <div class="field" data-field="data_types">
           <span class="field-label">Sensitive data types stored, processed, or transmitted</span>
@@ -248,27 +277,38 @@
             <label class="option" data-show-region="us"><input type="checkbox" name="data_types" value="fti"> <span>Federal Tax Information (FTI)</span></label>
             <label class="option"><input type="checkbox" name="data_types" value="none"> <span>None of the above</span></label>
           </div>
+          <label class="option option-toggle" id="show-all-data-types-wrapper">
+            <input type="checkbox" id="show-all-data-types"> <span>Don't see what you handle? Show all data types</span>
+          </label>
+        </div>
+        <div class="section-continue">
+          <button type="button" class="btn btn-primary btn-small section-continue-btn">Continue</button>
         </div>
       </fieldset>
 
       <!-- SECTION 4: CUSTOMERS & CONTRACTS -->
-      <fieldset class="section">
+      <fieldset class="section" data-section="4">
         <legend class="section-legend">
-          <span class="section-number">04<span class="section-dot">.</span></span>
-          <span class="section-title">Customers and contracts</span>
+          <span class="section-marker">
+            <span class="section-check" aria-hidden="true">&#10003;</span>
+            <span class="section-number">04<span class="section-dot">.</span></span>
+            <span class="section-title">Customers and contracts</span>
+          </span>
         </legend>
+        <div class="section-summary" aria-hidden="true"></div>
 
         <div class="field" data-field="customer_types">
           <span class="field-label">Customer types</span>
           <div class="checkbox-group">
-            <label class="option"><input type="checkbox" name="customer_types" value="consumers"> <span>Direct consumers (B2C)</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="consumers"> <span>Individual people (consumers)</span></label>
             <label class="option"><input type="checkbox" name="customer_types" value="businesses"> <span>Other businesses (B2B)</span></label>
-            <label class="option"><input type="checkbox" name="customer_types" value="healthcare_orgs"> <span>Healthcare organizations</span></label>
-            <label class="option"><input type="checkbox" name="customer_types" value="financial_orgs"> <span>Financial institutions</span></label>
-            <label class="option" data-show-region="us"><input type="checkbox" name="customer_types" value="federal_civilian"> <span>US federal government (civilian)</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="healthcare_orgs"> <span>Healthcare providers or health plans (clinics, hospitals, insurers)</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="financial_orgs"> <span>Financial institutions (banks, lenders, insurers, advisors)</span></label>
+            <label class="option" data-show-region="us"><input type="checkbox" name="customer_types" value="federal_civilian"> <span>US federal civilian agencies (HHS, GSA, etc.)</span></label>
             <label class="option" data-show-region="us"><input type="checkbox" name="customer_types" value="dod"> <span>US Department of Defense</span></label>
-            <label class="option"><input type="checkbox" name="customer_types" value="state_local"> <span>State or local government</span></label>
-            <label class="option"><input type="checkbox" name="customer_types" value="education"> <span>Educational institutions</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="state_local"> <span>State, local, or tribal governments</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="education"> <span>Schools, colleges, or universities</span></label>
+            <label class="option"><input type="checkbox" name="customer_types" value="nonprofit"> <span>Nonprofits</span></label>
           </div>
         </div>
 
@@ -284,14 +324,21 @@
             <label class="option"><input type="checkbox" name="contracts" value="card_brand"> <span>Card brand merchant or service provider agreement</span></label>
           </div>
         </div>
+        <div class="section-continue">
+          <button type="button" class="btn btn-primary btn-small section-continue-btn">Continue</button>
+        </div>
       </fieldset>
 
       <!-- SECTION 5: OPERATIONS -->
-      <fieldset class="section" id="section-operations">
+      <fieldset class="section" id="section-operations" data-section="5">
         <legend class="section-legend">
-          <span class="section-number">05<span class="section-dot">.</span></span>
-          <span class="section-title">Operations</span>
+          <span class="section-marker">
+            <span class="section-check" aria-hidden="true">&#10003;</span>
+            <span class="section-number">05<span class="section-dot">.</span></span>
+            <span class="section-title">Operations</span>
+          </span>
         </legend>
+        <div class="section-summary" aria-hidden="true"></div>
 
         <div class="field conditional" data-field="card_handling">
           <label class="field-label" for="card_handling">Payment card handling</label>
@@ -329,10 +376,12 @@
         <p class="section-empty-state">
           Based on your answers above, no operational details need to be collected. You can generate the profile now.
         </p>
+        <div class="section-continue">
+          <button type="submit" class="btn btn-primary">Generate profile</button>
+        </div>
       </fieldset>
 
-      <div class="actions">
-        <button type="submit" class="btn btn-primary">Generate profile</button>
+      <div class="form-footer">
         <button type="reset" class="btn btn-ghost">Reset</button>
       </div>
 
