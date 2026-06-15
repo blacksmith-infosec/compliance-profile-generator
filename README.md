@@ -118,7 +118,7 @@ This is an indicative tool. It uses heuristics based on common applicability tri
 
 ## License
 
-MIT. See [LICENSE](LICENSE) for details.
+Apache. See [LICENSE](LICENSE) for details.
 
 ## About Blacksmith InfoSec
 
