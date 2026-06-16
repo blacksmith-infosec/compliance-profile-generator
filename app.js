@@ -20,7 +20,7 @@
 
   const setTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('bs-theme', theme); } catch {(e) => {;};}
+    try { localStorage.setItem('bs-theme', theme); } catch {() => {;};}
   };
 
   const toggleTheme = () => {
@@ -650,12 +650,17 @@
       var json = decodeURIComponent(escape(atob(b64)));
       var payload = JSON.parse(json);
       if (payload.v !== SCHEMA_VERSION) {
-        console.warn('Profile URL schema version mismatch:', payload.v);
+        // console.warn('Profile URL schema version mismatch:', payload.v);
         return null;
       }
       return payload.profile;
-    } catch (e) {
-      console.warn('Failed to decode profile from URL hash:', e);
+    } catch {
+      // console.warn('Failed to decode profile from URL hash:', err);
+      // const errorMessage = err instanceof Error ? err.message : err;
+      // setting up for conversion to react / ts
+      // {error && <div className='error'>{error}</div>}
+      // setError(errorMessage);
+
       return null;
     }
   };
@@ -665,8 +670,12 @@
       var hash = encodeProfileToHash(data);
       // replaceState avoids polluting browser history
       history.replaceState(null, '', hash);
-    } catch (e) {
-      console.warn('Failed to update URL hash:', e);
+    } catch {
+      // console.warn('Failed to update URL hash:', err);
+      // const errorMessage = err instanceof Error ? err.message : err;
+      // setting up for conversion to react / ts
+      // {error && <div className='error'>{error}</div>}
+      // setError(errorMessage);
     }
   };
 
@@ -761,7 +770,7 @@
       .map((fw) => { return evaluateFramework(fw, data); })
       .filter((m) => { return m !== null; });
 
-    // Apply suppression: if a framework declares `suppressed_by: [...]` and any of those IDs are in the matches, drop it.
+    // Apply suppression: if a framework declares `suppressed_by: [...]` & any of those IDs are in the matches, drop it.
     var matchIds = matches.map((m) => { return m.framework.id; });
     matches = matches.filter((m) => {
       var suppressors = m.framework.suppressed_by;
@@ -1064,7 +1073,13 @@
         preview.classList.remove('hidden');
         uploadBtn.classList.add('hidden');
       }
-    } catch (e) { /* localStorage may be blocked */ }
+    } catch { 
+      /* localStorage may be blocked */ 
+      // const errorMessage = err instanceof Error ? err.message : err;
+      // setting up for conversion to react / ts
+      // {error && <div className='error'>{error}</div>}
+      // setError(errorMessage);
+    }
 
     uploadBtn.addEventListener('click', () => { input.click(); });
 
@@ -1099,7 +1114,8 @@
       try {
         localStorage.removeItem(LOGO_STORAGE_KEY);
         localStorage.removeItem(LOGO_ASPECT_KEY);
-      } catch (e) { /* ignore */ }
+      } 
+      catch { /* ignore */ }
       thumb.src = '';
       preview.classList.add('hidden');
       uploadBtn.classList.remove('hidden');
@@ -1113,9 +1129,14 @@
         thumb.src = dataUrl;
         preview.classList.remove('hidden');
         uploadBtn.classList.add('hidden');
-      } catch (err) {
-        alert('Could not save logo. It may be too large for browser storage.');
-      }
+      } catch { 
+      /* localStorage may be blocked */ 
+      // const errorMessage = err instanceof Error ? err.message : err;
+      // setting up for conversion to react / ts
+      // {error && <div className='error'>{error}</div>}
+      // setError(errorMessage);
+      alert('Could not save logo. It may be too large for browser storage.');
+    }
     };
   };
 
@@ -1147,8 +1168,8 @@
         var ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         callback(canvas.toDataURL('image/png'), w / h);
-      } catch (e) {
-        if (errorCallback) errorCallback(e.message || 'conversion failed');
+      } catch (err) {
+        if (errorCallback) errorCallback(err.message || 'conversion failed');
       }
     };
     img.onerror = () => {

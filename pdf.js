@@ -50,9 +50,10 @@
     }
     try {
       generatePDF(data.matches, data.clientName, data.mspName);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-      alert('PDF generation failed. See browser console for details.');
+    } catch {
+      // console.error('PDF generation failed:', err);
+      // alert('PDF generation failed. See browser console for details.');
+      alert('PDF generation failed.');
     }
   };
 
@@ -125,7 +126,13 @@
       logoData = localStorage.getItem('blacksmith_msp_logo_v1');
       var storedAspect = localStorage.getItem('blacksmith_msp_logo_aspect_v1');
       if (storedAspect) logoAspect = parseFloat(storedAspect) || 1;
-    } catch (e) { /* localStorage unavailable */ }
+    } catch { 
+      /* localStorage unavailable */ 
+      // const errorMessage = err instanceof Error ? err.message : err;
+      // setting up for conversion to react / ts
+      // {error && <div className='error'>{error}</div>}
+      // setError(errorMessage);
+    }
     if (logoData) {
       try {
         var maxSize = 56; // ~0.78 inch box
@@ -141,8 +148,9 @@
         var logoY = state.y;
         // jsPDF auto-detects format from data URL
         doc.addImage(logoData, logoX, logoY, logoW, logoH);
-      } catch (logoErr) {
-        console.warn('Failed to embed logo in PDF:', logoErr);
+      } catch {
+      // } catch (logoErr) {
+        // console.warn('Failed to embed logo in PDF:', logoErr);
       }
     }
 
@@ -162,7 +170,6 @@
 
     // Metadata grid
     var labelWidth = 80;
-    var fieldY = state.y;
 
     var meta = [
       ['Prepared for', clientName || 'Not specified'],
