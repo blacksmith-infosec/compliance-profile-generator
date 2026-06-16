@@ -6,7 +6,7 @@
  * window.jspdf.jsPDF is available.
  * ===================================================================== */
 
-(function () {
+(() => {
   'use strict';
 
   // ---- Page geometry (points; jsPDF default unit is 'pt') ------------
@@ -57,13 +57,13 @@
   };
 
   // ---- Main generator ------------------------------------------------
-  function generatePDF(matches, clientName, mspName) {
+  const generatePDF = (matches, clientName, mspName) => {
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
     // Group by tier
     var grouped = { definite: [], likely: [], consider: [] };
-    matches.forEach(function (m) {
+    matches.forEach((m) => {
       if (grouped[m.tier]) grouped[m.tier].push(m);
     });
 
@@ -71,7 +71,7 @@
 
     drawReportHeader(doc, state, clientName, mspName, matches.length, grouped);
 
-    ['definite', 'likely', 'consider'].forEach(function (tier) {
+    ['definite', 'likely', 'consider'].forEach((tier) => {
       if (grouped[tier].length === 0) return;
       drawTierSection(doc, state, tier, grouped[tier]);
     });
@@ -79,33 +79,33 @@
     drawFooter(doc, state);
 
     doc.save(makeFilename(clientName));
-  }
+  };
 
   // ---- Helpers: low-level drawing -----------------------------------
 
-  function setFont(doc, weight) {
+  const setFont = (doc, weight) => {
     doc.setFont('helvetica', weight || 'normal');
-  }
+  };
 
-  function setColor(doc, rgb) {
+  const setColor = (doc, rgb) => {
     doc.setTextColor(rgb[0], rgb[1], rgb[2]);
-  }
+  };
 
-  function setFill(doc, rgb) {
+  const setFill = (doc, rgb) => {
     doc.setFillColor(rgb[0], rgb[1], rgb[2]);
-  }
+  };
 
-  function setDraw(doc, rgb) {
+  const setDraw = (doc, rgb) => {
     doc.setDrawColor(rgb[0], rgb[1], rgb[2]);
-  }
+  };
 
   // Convert font size in points to approximate line height in points.
-  function lineHeight(size, factor) {
+  const lineHeight = (size, factor) => {
     return size * (factor || 1.32);
-  }
+  };
 
   // Ensure space; if not enough room, push to next page and return true.
-  function ensureSpace(doc, state, needed) {
+  const ensureSpace = (doc, state, needed) => {
     if (state.y + needed > CONTENT_BOTTOM) {
       doc.addPage();
       state.page += 1;
@@ -113,11 +113,11 @@
       return true;
     }
     return false;
-  }
+  };
 
   // ---- Higher-level building blocks ---------------------------------
 
-  function drawReportHeader(doc, state, clientName, mspName, total, grouped) {
+  const drawReportHeader = (doc, state, clientName, mspName, total, grouped) => {
     // Optional MSP logo in top-right corner of first page
     var logoData = null;
     var logoAspect = 1;
@@ -201,17 +201,17 @@
     doc.setLineWidth(1.2);
     doc.line(MARGIN_X, state.y, MARGIN_X + CONTENT_W, state.y);
     state.y += 18;
-  }
+  };
 
-  function drawTierSection(doc, state, tier, frameworks) {
+  const drawTierSection = (doc, state, tier, frameworks) => {
     drawTierHeader(doc, state, tier, frameworks.length);
     frameworks.forEach(function (m) {
       drawFrameworkCard(doc, state, m, tier);
     });
     state.y += 6;
-  }
+  };
 
-  function drawTierHeader(doc, state, tier, count) {
+  const drawTierHeader = (doc, state, tier, count) => {
     ensureSpace(doc, state, 28);
     var dotR = 4;
     var dotCx = MARGIN_X + dotR;
@@ -235,9 +235,9 @@
     doc.text(String(count), MARGIN_X + 16 + nameWidth + 8, state.y + 12);
 
     state.y += 22;
-  }
+  };
 
-  function drawFrameworkCard(doc, state, match, tier) {
+  const drawFrameworkCard = (doc, state, match, tier) => {
     var fw = match.framework;
     var reasons = match.reasons || [];
     var steps = fw.first_steps || [];
@@ -365,9 +365,9 @@
     doc.line(barX, cardTop + 2, barX, state.y - 4);
 
     state.y += 14;
-  }
+  };
 
-  function drawBullet(doc, state, marker, text, contentX, contentW, size) {
+  const drawBullet = (doc, state, marker, text, contentX, contentW, size) => {
     var markerX = contentX;
     var textX = contentX + 14;
     var textWidth = contentW - 14;
@@ -388,9 +388,9 @@
       state.y += lineHeight(size);
     });
     state.y += 1;
-  }
+  };
 
-  function drawBlockText(doc, state, text, opts) {
+  const drawBlockText = (doc, state, text, opts) => {
     if (!text) return;
     setFont(doc, opts.weight || 'normal');
     doc.setFontSize(opts.size || 10);
@@ -403,9 +403,9 @@
       state.y += lh;
     });
     if (opts.gapAfter) state.y += opts.gapAfter;
-  }
+  };
 
-  function drawFooter(doc, state) {
+  const drawFooter = (doc, state) => {
     // Anchor footer near the bottom of the current (last) page.
     var footerTop = CONTENT_BOTTOM - 42;
     if (state.y > footerTop) {
@@ -425,7 +425,8 @@
     doc.setFontSize(8);
     setColor(doc, C_MUTED);
 
-    var attribution = 'Open source compliance scoping tool by Blacksmith InfoSec. Suggests likely-applicable frameworks based on the inputs provided.';
+    var attribution = 'Open source compliance scoping tool by Blacksmith InfoSec.' + 
+            'Suggests likely-applicable frameworks based on the inputs provided.';
     var attrLines = doc.splitTextToSize(attribution, CONTENT_W);
     attrLines.forEach(function (ln) {
       doc.text(ln, MARGIN_X, state.y + 7);
@@ -440,34 +441,34 @@
       doc.text(ln, MARGIN_X, state.y + 7);
       state.y += lineHeight(8);
     });
-  }
+  };
 
   // ---- Misc helpers --------------------------------------------------
 
-  function approxLines(doc, text, maxWidth, fontSize) {
+  const approxLines = (doc, text, maxWidth, fontSize) => {
     if (!text) return 0;
     setFont(doc, 'normal');
     doc.setFontSize(fontSize);
     return doc.splitTextToSize(String(text), maxWidth).length;
-  }
+  };
 
-  function summaryLine(total, grouped) {
+  const summaryLine = (total, grouped) => {
     var parts = [];
     parts.push(total + ' frameworks identified');
     if (grouped.definite.length) parts.push(grouped.definite.length + ' definitely apply');
     if (grouped.likely.length) parts.push(grouped.likely.length + ' likely apply');
     if (grouped.consider.length) parts.push(grouped.consider.length + ' recommended');
     return parts.join(' \u00B7 ');
-  }
+  };
 
-  function formatToday() {
+  const formatToday = () => {
     var d = new Date();
     var months = ['January','February','March','April','May','June',
                   'July','August','September','October','November','December'];
     return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-  }
+  };
 
-  function makeFilename(clientName) {
+  const makeFilename = (clientName) => {
     var slug = (clientName || 'compliance-profile')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -479,5 +480,5 @@
     var mm = ('0' + (d.getMonth() + 1)).slice(-2);
     var dd = ('0' + d.getDate()).slice(-2);
     return slug + '-compliance-profile-' + yyyy + mm + dd + '.pdf';
-  }
+  };
 })();
