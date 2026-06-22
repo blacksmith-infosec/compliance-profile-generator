@@ -432,7 +432,7 @@
     doc.setFontSize(8);
     setColor(doc, C_MUTED);
 
-    var attribution = 'Open source compliance scoping tool by Blacksmith InfoSec.' + 
+    var attribution = 'Open source compliance scoping tool by Blacksmith InfoSec. ' + 
             'Suggests likely-applicable frameworks based on the inputs provided.';
     var attrLines = doc.splitTextToSize(attribution, CONTENT_W);
     attrLines.forEach(function (ln) {

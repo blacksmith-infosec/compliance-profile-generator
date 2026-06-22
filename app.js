@@ -2,7 +2,7 @@
    Compliance Profile Generator - Application Logic
    ================================================================= */
 
-() => {
+(() => {
   'use strict';
 
   // -----------------------------------------------------------------
@@ -20,7 +20,9 @@
 
   const setTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('bs-theme', theme); } catch {() => {;};}
+    try { localStorage.setItem('bs-theme', theme); } catch {
+      //set up error handling
+    }
   };
 
   const toggleTheme = () => {
@@ -1226,4 +1228,4 @@
     }
   });
 
-};
+});
