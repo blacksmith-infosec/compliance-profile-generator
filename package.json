@@ -4,6 +4,9 @@
   "description": "A free risk assessment tool for MSPs to evaluate their client's and prospect's security posture.",
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "eslint --ext .jsx,.js,.ts,.tsx ."
   },
   "license": "Apache-2.0",
@@ -12,11 +15,13 @@
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "globals": "^17.6.0",
     "eslint": "^10.0.3",
     "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react": "^7.37.5"
-  }, "overrides":{
-    "eslint" : "^10.0.3"
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.6.0",
+    "vite": "^8.1.2"
+  },
+  "overrides": {
+    "eslint": "^10.0.3"
   }
 }
