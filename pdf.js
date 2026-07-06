@@ -181,10 +181,10 @@
 
     setFont(doc, 'normal');
     doc.setFontSize(9.5);
-    const lineHeight = lineHeight(9.5);
+    const metaLineHeight = lineHeight(9.5);
 
     meta.forEach((row) => {
-      ensureSpace(doc, state, lineHeight);
+      ensureSpace(doc, state, metaLineHeight);
       // Label
       setFont(doc, 'bold');
       setColor(doc, C_MUTED);
@@ -195,12 +195,12 @@
       const valueLines = doc.splitTextToSize(String(row[1]), CONTENT_W - labelWidth);
       for (let i = 0; i < valueLines.length; i++) {
         if (i > 0) {
-          ensureSpace(doc, state, lineHeight);
-          state.y += lineHeight;
+          ensureSpace(doc, state, metaLineHeight);
+          state.y += metaLineHeight;
         }
         doc.text(valueLines[i], MARGIN_X + labelWidth, state.y + 9);
       }
-      state.y += lineHeight;
+      state.y += metaLineHeight;
     });
 
     state.y += 6;
