@@ -10,40 +10,40 @@
   'use strict';
 
   // ---- Page geometry (points; jsPDF default unit is 'pt') ------------
-  var PAGE_W = 612;     // 8.5 inches
-  var PAGE_H = 792;     // 11 inches
-  var MARGIN_X = 56;    // ~0.78 inch left/right
-  var MARGIN_TOP = 56;
-  var MARGIN_BOTTOM = 56;
-  var CONTENT_W = PAGE_W - (MARGIN_X * 2);
-  var CONTENT_BOTTOM = PAGE_H - MARGIN_BOTTOM;
+  const PAGE_W = 612;     // 8.5 inches
+  const PAGE_H = 792;     // 11 inches
+  const MARGIN_X = 56;    // ~0.78 inch left/right
+  const MARGIN_TOP = 56;
+  const MARGIN_BOTTOM = 56;
+  const CONTENT_W = PAGE_W - (MARGIN_X * 2);
+  const CONTENT_BOTTOM = PAGE_H - MARGIN_BOTTOM;
 
   // ---- Brand colors (RGB 0-255) --------------------------------------
-  var C_TITLE = [6, 35, 63];        // Maastricht Blue
-  var C_BODY = [35, 31, 32];        // Blacksmith Black
-  var C_MUTED = [92, 87, 89];       // Muted neutral
-  var C_LIGHT_BORDER = [220, 220, 224];
-  var C_LINK = [0, 134, 183];       // Picton Blue (darker)
+  const C_TITLE = [6, 35, 63];        // Maastricht Blue
+  const C_BODY = [35, 31, 32];        // Blacksmith Black
+  const C_MUTED = [92, 87, 89];       // Muted neutral
+  const C_LIGHT_BORDER = [220, 220, 224];
+  const C_LINK = [0, 134, 183];       // Picton Blue (darker)
 
-  var TIER_COLOR = {
+  const TIER_COLOR = {
     definite: [46, 139, 87],   // #2E8B57 sea green
     likely:   [183, 121, 31],  // #B7791F amber
     consider: [30, 93, 156]    // #1E5D9C medium blue
   };
 
-  var TIER_LABEL = {
+  const TIER_LABEL = {
     definite: 'Definitely applies',
     likely:   'Likely applies',
     consider: 'Recommended'
   };
 
   // ---- Entry point ---------------------------------------------------
-  window.downloadProfilePDF = function () {
+  window.downloadProfilePDF = () => {
     if (!window.jspdf || !window.jspdf.jsPDF) {
       alert('PDF library failed to load. Please refresh and try again.');
       return;
     }
-    var data = window.lastProfileResults;
+    const data = window.lastProfileResults;
     if (!data || !data.matches || !data.matches.length) {
       alert('Generate a profile first, then download the PDF.');
       return;
@@ -59,16 +59,16 @@
 
   // ---- Main generator ------------------------------------------------
   const generatePDF = (matches, clientName, mspName) => {
-    var jsPDF = window.jspdf.jsPDF;
-    var doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
     // Group by tier
-    var grouped = { definite: [], likely: [], consider: [] };
-    matches.forEach((m) => {
-      if (grouped[m.tier]) grouped[m.tier].push(m);
+    const grouped = { definite: [], likely: [], consider: [] };
+    matches.forEach((match) => {
+      if (grouped[match.tier]) grouped[match.tier].push(match);
     });
 
-    var state = { y: MARGIN_TOP, page: 1 };
+    const state = { y: MARGIN_TOP, page: 1 };
 
     drawReportHeader(doc, state, clientName, mspName, matches.length, grouped);
 
@@ -120,11 +120,11 @@
 
   const drawReportHeader = (doc, state, clientName, mspName, total, grouped) => {
     // Optional MSP logo in top-right corner of first page
-    var logoData = null;
-    var logoAspect = 1;
+    let logoData = null;
+    let logoAspect = 1;
     try {
       logoData = localStorage.getItem('blacksmith_msp_logo_v1');
-      var storedAspect = localStorage.getItem('blacksmith_msp_logo_aspect_v1');
+      const storedAspect = localStorage.getItem('blacksmith_msp_logo_aspect_v1');
       if (storedAspect) logoAspect = parseFloat(storedAspect) || 1;
     } catch { 
       /* localStorage unavailable */ 
@@ -135,19 +135,20 @@
     }
     if (logoData) {
       try {
-        var maxSize = 56; // ~0.78 inch box
-        var logoW, logoH;
+        const maxSize = 56; // ~0.78 inch box
+        let logoWidth;
+        let logoHeight;
         if (logoAspect >= 1) {
-          logoW = maxSize;
-          logoH = maxSize / logoAspect;
+          logoWidth = maxSize;
+          logoHeight = maxSize / logoAspect;
         } else {
-          logoH = maxSize;
-          logoW = maxSize * logoAspect;
+          logoHeight = maxSize;
+          logoWidth = maxSize * logoAspect;
         }
-        var logoX = PAGE_W - MARGIN_X - logoW;
-        var logoY = state.y;
+        const logoX = PAGE_W - MARGIN_X - logoWidth;
+        const logoY = state.y;
         // jsPDF auto-detects format from data URL
-        doc.addImage(logoData, logoX, logoY, logoW, logoH);
+        doc.addImage(logoData, logoX, logoY, logoWidth, logoHeight);
       } catch {
       // } catch (logoErr) {
         // console.warn('Failed to embed logo in PDF:', logoErr);
@@ -169,9 +170,9 @@
     state.y += 36;
 
     // Metadata grid
-    var labelWidth = 80;
+    const labelWidth = 80;
 
-    var meta = [
+    const meta = [
       ['Prepared for', clientName || 'Not specified'],
       ['Prepared by', mspName || 'Not specified'],
       ['Generated', formatToday()],
@@ -180,10 +181,10 @@
 
     setFont(doc, 'normal');
     doc.setFontSize(9.5);
-    var lh = lineHeight(9.5);
+    const lineHeight = lineHeight(9.5);
 
-    meta.forEach(function (row) {
-      ensureSpace(doc, state, lh);
+    meta.forEach((row) => {
+      ensureSpace(doc, state, lineHeight);
       // Label
       setFont(doc, 'bold');
       setColor(doc, C_MUTED);
@@ -191,15 +192,15 @@
       // Value
       setFont(doc, 'normal');
       setColor(doc, C_BODY);
-      var valueLines = doc.splitTextToSize(String(row[1]), CONTENT_W - labelWidth);
-      for (var i = 0; i < valueLines.length; i++) {
+      const valueLines = doc.splitTextToSize(String(row[1]), CONTENT_W - labelWidth);
+      for (let i = 0; i < valueLines.length; i++) {
         if (i > 0) {
-          ensureSpace(doc, state, lh);
-          state.y += lh;
+          ensureSpace(doc, state, lineHeight);
+          state.y += lineHeight;
         }
         doc.text(valueLines[i], MARGIN_X + labelWidth, state.y + 9);
       }
-      state.y += lh;
+      state.y += lineHeight;
     });
 
     state.y += 6;
@@ -212,27 +213,27 @@
 
   const drawTierSection = (doc, state, tier, frameworks) => {
     drawTierHeader(doc, state, tier, frameworks.length);
-    frameworks.forEach(function (m) {
-      drawFrameworkCard(doc, state, m, tier);
+    frameworks.forEach((match) => {
+      drawFrameworkCard(doc, state, match, tier);
     });
     state.y += 6;
   };
 
   const drawTierHeader = (doc, state, tier, count) => {
     ensureSpace(doc, state, 28);
-    var dotR = 4;
-    var dotCx = MARGIN_X + dotR;
-    var dotCy = state.y + 9;
+    const dotRadius = 4;
+    const dotCenterX = MARGIN_X + dotRadius;
+    const dotCenterY = state.y + 9;
 
     // Dot
     setFill(doc, TIER_COLOR[tier]);
-    doc.circle(dotCx, dotCy, dotR, 'F');
+    doc.circle(dotCenterX, dotCenterY, dotRadius, 'F');
 
     // Tier name (set font first so we measure width at the right size)
     setFont(doc, 'bold');
     doc.setFontSize(13);
     setColor(doc, C_TITLE);
-    var nameWidth = doc.getTextWidth(TIER_LABEL[tier]);
+    const nameWidth = doc.getTextWidth(TIER_LABEL[tier]);
     doc.text(TIER_LABEL[tier], MARGIN_X + 16, state.y + 12);
 
     // Count (smaller, muted, placed to the right of the name)
@@ -245,47 +246,47 @@
   };
 
   const drawFrameworkCard = (doc, state, match, tier) => {
-    var fw = match.framework;
-    var reasons = match.reasons || [];
-    var steps = fw.first_steps || [];
+    const framework = match.framework;
+    const reasons = match.reasons || [];
+    const steps = framework.first_steps || [];
 
     // We need to know roughly how tall this card will be so we don't
     // start it near the bottom of a page. Estimate generously.
-    var estName = lineHeight(12);
-    var estMeta = lineHeight(8.5);
-    var estDesc = approxLines(doc, fw.description, CONTENT_W - 18, 9.5) * lineHeight(9.5);
-    var estReasonsLabel = lineHeight(8.5) + 4;
-    var estReasons = reasons.reduce(function (sum, r) {
+    const estName = lineHeight(12);
+    const estMeta = lineHeight(8.5);
+    const estDesc = approxLines(doc, framework.description, CONTENT_W - 18, 9.5) * lineHeight(9.5);
+    const estReasonsLabel = lineHeight(8.5) + 4;
+    const estReasons = reasons.reduce((sum, r) => {
       return sum + approxLines(doc, r, CONTENT_W - 30, 9.5) * lineHeight(9.5);
     }, 0);
-    var estStepsLabel = lineHeight(8.5) + 4;
-    var estSteps = steps.reduce(function (sum, s) {
+    const estStepsLabel = lineHeight(8.5) + 4;
+    const estSteps = steps.reduce((sum, s) => {
       return sum + approxLines(doc, s, CONTENT_W - 30, 9.5) * lineHeight(9.5);
     }, 0);
-    var estTotal = estName + estMeta + 8 + estDesc + 8 + estReasonsLabel + estReasons + 6 +
+    const estTotal = estName + estMeta + 8 + estDesc + 8 + estReasonsLabel + estReasons + 6 +
                    estStepsLabel + estSteps + 16;
 
     // If the entire card is shorter than remaining page, avoid splitting it
     // by triggering a page break. Otherwise allow it to flow.
-    var remaining = CONTENT_BOTTOM - state.y;
+    const remaining = CONTENT_BOTTOM - state.y;
     if (estTotal <= CONTENT_BOTTOM - MARGIN_TOP && remaining < estTotal) {
       doc.addPage();
       state.page += 1;
       state.y = MARGIN_TOP;
     }
 
-    var cardTop = state.y;
-    var contentX = MARGIN_X + 10;
-    var contentW = CONTENT_W - 18;
+    const cardTop = state.y;
+    const contentX = MARGIN_X + 10;
+    const contentW = CONTENT_W - 18;
 
     // Framework name
     setFont(doc, 'bold');
     doc.setFontSize(12);
     setColor(doc, C_TITLE);
-    var nameLines = doc.splitTextToSize(fw.name, contentW);
-    nameLines.forEach(function (ln) {
+    const nameLines = doc.splitTextToSize(framework.name, contentW);
+    nameLines.forEach((line) => {
       ensureSpace(doc, state, lineHeight(12));
-      doc.text(ln, contentX, state.y + 10);
+      doc.text(line, contentX, state.y + 10);
       state.y += lineHeight(12);
     });
     state.y += 2;
@@ -294,18 +295,18 @@
     setFont(doc, 'normal');
     doc.setFontSize(8.5);
     setColor(doc, C_MUTED);
-    var catText = (fw.category || '').toUpperCase();
-    var catLines = doc.splitTextToSize(catText, contentW - 70);
-    catLines.forEach(function (ln, idx) {
+    const categoryText = (framework.category || '').toUpperCase();
+    const categoryLines = doc.splitTextToSize(categoryText, contentW - 70);
+    categoryLines.forEach((line, idx) => {
       ensureSpace(doc, state, lineHeight(8.5));
-      doc.text(ln, contentX, state.y + 8);
-      if (idx === catLines.length - 1 && fw.reference_url) {
+      doc.text(line, contentX, state.y + 8);
+      if (idx === categoryLines.length - 1 && framework.reference_url) {
         // Place "Reference" link to the right of the last category line
-        var refLabel = 'REFERENCE';
+        const refLabel = 'REFERENCE';
         setFont(doc, 'bold');
         doc.setFontSize(8.5);
         setColor(doc, C_LINK);
-        var refX = contentX + doc.getTextWidth(ln) + 12;
+        let refX = contentX + doc.getTextWidth(line) + 12;
         // Ensure we don't run off the right edge; if so put on a new line
         if (refX + doc.getTextWidth(refLabel) > MARGIN_X + CONTENT_W - 8) {
           state.y += lineHeight(8.5);
@@ -314,12 +315,12 @@
         }
         doc.text(refLabel, refX, state.y + 8);
         // Underline
-        var refWidth = doc.getTextWidth(refLabel);
+        const refWidth = doc.getTextWidth(refLabel);
         setDraw(doc, C_LINK);
         doc.setLineWidth(0.6);
         doc.line(refX, state.y + 9.5, refX + refWidth, state.y + 9.5);
         // Clickable annotation
-        doc.link(refX - 1, state.y, refWidth + 2, 11, { url: fw.reference_url });
+        doc.link(refX - 1, state.y, refWidth + 2, 11, { url: framework.reference_url });
         // Restore styling for next category line
         setFont(doc, 'normal');
         doc.setFontSize(8.5);
@@ -330,7 +331,7 @@
     state.y += 4;
 
     // Description
-    drawBlockText(doc, state, fw.description, {
+    drawBlockText(doc, state, framework.description, {
       x: contentX, maxWidth: contentW, size: 9.5, color: C_BODY, gapAfter: 8
     });
 
@@ -343,7 +344,7 @@
     state.y += lineHeight(8) + 2;
 
     // Reasons (bulleted)
-    reasons.forEach(function (reason) {
+    reasons.forEach((reason) => {
       drawBullet(doc, state, '\u2022', reason, contentX, contentW, 9.5);
     });
     state.y += 4;
@@ -357,13 +358,13 @@
       doc.text('WHERE TO START', contentX, state.y + 7);
       state.y += lineHeight(8) + 2;
 
-      steps.forEach(function (step, idx) {
+      steps.forEach((step, idx) => {
         drawBullet(doc, state, (idx + 1) + '.', step, contentX, contentW, 9.5);
       });
     }
 
     // Card bottom: draw the left accent bar from cardTop to current state.y
-    var barX = MARGIN_X;
+    const barX = MARGIN_X;
     setDraw(doc, TIER_COLOR[tier]);
     doc.setLineWidth(2.5);
     // Note: if the card flowed across pages this single line will only span
@@ -375,16 +376,16 @@
   };
 
   const drawBullet = (doc, state, marker, text, contentX, contentW, size) => {
-    var markerX = contentX;
-    var textX = contentX + 14;
-    var textWidth = contentW - 14;
+    const markerX = contentX;
+    const textX = contentX + 14;
+    const textWidth = contentW - 14;
 
     setFont(doc, 'normal');
     doc.setFontSize(size);
     setColor(doc, C_BODY);
 
-    var lines = doc.splitTextToSize(String(text), textWidth);
-    lines.forEach(function (ln, i) {
+    const lines = doc.splitTextToSize(String(text), textWidth);
+    lines.forEach((ln, i) => {
       ensureSpace(doc, state, lineHeight(size));
       if (i === 0) {
         setFont(doc, 'bold');
@@ -402,11 +403,11 @@
     setFont(doc, opts.weight || 'normal');
     doc.setFontSize(opts.size || 10);
     setColor(doc, opts.color || C_BODY);
-    var lines = doc.splitTextToSize(String(text), opts.maxWidth || CONTENT_W);
-    var lh = lineHeight(opts.size || 10);
-    lines.forEach(function (ln) {
+    const lines = doc.splitTextToSize(String(text), opts.maxWidth || CONTENT_W);
+    const lh = lineHeight(opts.size || 10);
+    lines.forEach((line) => {
       ensureSpace(doc, state, lh);
-      doc.text(ln, opts.x || MARGIN_X, state.y + (opts.size || 10) * 0.85);
+      doc.text(line, opts.x || MARGIN_X, state.y + (opts.size || 10) * 0.85);
       state.y += lh;
     });
     if (opts.gapAfter) state.y += opts.gapAfter;
@@ -414,7 +415,7 @@
 
   const drawFooter = (doc, state) => {
     // Anchor footer near the bottom of the current (last) page.
-    var footerTop = CONTENT_BOTTOM - 42;
+    const footerTop = CONTENT_BOTTOM - 42;
     if (state.y > footerTop) {
       doc.addPage();
       state.page += 1;
@@ -432,20 +433,20 @@
     doc.setFontSize(8);
     setColor(doc, C_MUTED);
 
-    var attribution = 'Open source compliance scoping tool by Blacksmith InfoSec. ' + 
+    const attribution = 'Open source compliance scoping tool by Blacksmith InfoSec. ' + 
             'Suggests likely-applicable frameworks based on the inputs provided.';
-    var attrLines = doc.splitTextToSize(attribution, CONTENT_W);
-    attrLines.forEach(function (ln) {
-      doc.text(ln, MARGIN_X, state.y + 7);
+    const attrLines = doc.splitTextToSize(attribution, CONTENT_W);
+    attrLines.forEach((line) => {
+      doc.text(line, MARGIN_X, state.y + 7);
       state.y += lineHeight(8);
     });
 
     state.y += 2;
 
-    var disclaimer = 'Educational reference, not legal advice. Confirm applicability with qualified counsel.';
-    var discLines = doc.splitTextToSize(disclaimer, CONTENT_W);
-    discLines.forEach(function (ln) {
-      doc.text(ln, MARGIN_X, state.y + 7);
+    const disclaimer = 'Educational reference, not legal advice. Confirm applicability with qualified counsel.';
+    const discLines = doc.splitTextToSize(disclaimer, CONTENT_W);
+    discLines.forEach((line) => {
+      doc.text(line, MARGIN_X, state.y + 7);
       state.y += lineHeight(8);
     });
   };
@@ -460,7 +461,7 @@
   };
 
   const summaryLine = (total, grouped) => {
-    var parts = [];
+    const parts = [];
     parts.push(total + ' frameworks identified');
     if (grouped.definite.length) parts.push(grouped.definite.length + ' definitely apply');
     if (grouped.likely.length) parts.push(grouped.likely.length + ' likely apply');
@@ -469,23 +470,23 @@
   };
 
   const formatToday = () => {
-    var d = new Date();
-    var months = ['January','February','March','April','May','June',
+    const date = new Date();
+    const months = ['January','February','March','April','May','June',
                   'July','August','September','October','November','December'];
-    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
   };
 
   const makeFilename = (clientName) => {
-    var slug = (clientName || 'compliance-profile')
+    let slug = (clientName || 'compliance-profile')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .substring(0, 60);
     if (!slug) slug = 'compliance-profile';
-    var d = new Date();
-    var yyyy = d.getFullYear();
-    var mm = ('0' + (d.getMonth() + 1)).slice(-2);
-    var dd = ('0' + d.getDate()).slice(-2);
+    const date = new Date();
+    const yyyy = date.getFullYear();
+    const mm = ('0' + (date.getMonth() + 1)).slice(-2);
+    const dd = ('0' + date.getDate()).slice(-2);
     return slug + '-compliance-profile-' + yyyy + mm + dd + '.pdf';
   };
 })();

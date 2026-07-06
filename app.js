@@ -10,7 +10,7 @@
   // -----------------------------------------------------------------
 
   const getCurrentTheme = () => {
-    var explicit = document.documentElement.getAttribute('data-theme');
+    const explicit = document.documentElement.getAttribute('data-theme');
     if (explicit) return explicit;
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
@@ -26,7 +26,7 @@
   };
 
   const toggleTheme = () => {
-    var current = getCurrentTheme();
+    const current = getCurrentTheme();
     setTheme(current === 'dark' ? 'light' : 'dark');
   };
 
@@ -39,18 +39,18 @@
 
   const enforceExclusiveNone = (form, e) => {
     if (!e || !e.target || e.target.type !== 'checkbox') return;
-    var name = e.target.name;
-    var noneCb = form.querySelector('input[type="checkbox"][name="' + name + '"][value="none"]');
-    if (!noneCb) return;
+    const name = e.target.name;
+    const noneCheckbox = form.querySelector('input[type="checkbox"][name="' + name + '"][value="none"]');
+    if (!noneCheckbox) return;
 
     if (e.target.value === 'none' && e.target.checked) {
       // "None" just got checked - uncheck all other specifics in this group
-      form.querySelectorAll('input[type="checkbox"][name="' + name + '"]:not([value="none"])').forEach((cb) => {
-        cb.checked = false;
+      form.querySelectorAll('input[type="checkbox"][name="' + name + '"]:not([value="none"])').forEach((checkbox) => {
+        checkbox.checked = false;
       });
     } else if (e.target.value !== 'none' && e.target.checked) {
       // A specific option just got checked - uncheck "none"
-      noneCb.checked = false;
+      noneCheckbox.checked = false;
     }
   };
 
@@ -62,7 +62,7 @@
   // we map to the existing `industry` values used by framework triggers.
   // Multiple business types may map to the same industry value.
 
-  var BUSINESS_TYPE_TO_INDUSTRY = {
+  const BUSINESS_TYPE_TO_INDUSTRY = {
     // Accounting & Finance
     cpa_firm: 'financial_services',
     tax_prep: 'financial_services',
@@ -137,7 +137,7 @@
   // they can plausibly touch any data type depending on clients/engagement.
   // A "Show all data types" toggle in the form also bypasses this filter.
 
-  var DATA_TYPE_RELEVANCE = {
+  const DATA_TYPE_RELEVANCE = {
     phi: [
       'medical_practice', 'dental_practice', 'mental_health', 'pharmacy',
       'healthcare_it', 'health_insurance', 'pharma_biotech',
@@ -175,7 +175,7 @@
   // Broad-scope business types touch many data type categories depending on
   // their clients, engagements, or practice areas. For these, the filter is
   // bypassed entirely (all data types shown).
-  var BROAD_SCOPE_BUSINESS_TYPES = [
+  const BROAD_SCOPE_BUSINESS_TYPES = [
     'law_firm', 'consulting', 'msp_services', 'cybersecurity_vendor',
     'other_technology', 'saas', 'state_local_government', 'nonprofit', 'other'
   ];
@@ -184,7 +184,7 @@
   // CONDITIONAL FIELD VISIBILITY
   // -----------------------------------------------------------------
 
-  var VISIBILITY_RULES = {
+  const VISIBILITY_RULES = {
     us_states: {
       show_when: [
         { operating_regions_includes: 'us' }
@@ -233,10 +233,12 @@
 
   const checkCondition = (condition, data) => {
     // All keys in the condition must match (AND logic across keys)
-    var keys = Object.keys(condition);
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      var expected = condition[key];
+    const keys = Object.keys(condition);
+    let key;
+    let expected;
+    for (let i = 0; i < keys.length; i++) {
+      key = keys[i];
+      expected = condition[key];
 
       if (key === 'industry_in') {
         if (expected.indexOf(data.industry) === -1) return false;
@@ -260,39 +262,39 @@
   };
 
   const shouldShowField = (fieldName, data) => {
-    var rule = VISIBILITY_RULES[fieldName];
+    const rule = VISIBILITY_RULES[fieldName];
     if (!rule) return true;
     return rule.show_when.some((cond) => {
       return checkCondition(cond, data);
     });
   };
 
-  const clearFieldValue = (fieldEl) => {
-    var inputs = fieldEl.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+  const clearFieldValue = (fieldElement) => {
+    const inputs = fieldElement.querySelectorAll('input[type="radio"], input[type="checkbox"]');
     inputs.forEach((input) => { input.checked = false; });
-    var selects = fieldEl.querySelectorAll('select');
+    const selects = fieldElement.querySelectorAll('select');
     selects.forEach((sel) => { sel.value = ''; });
   };
 
   const updateConditionalFields = (form) => {
-    var data = readForm(form);
+    const data = readForm(form);
     Object.keys(VISIBILITY_RULES).forEach((fieldName) => {
-      var fieldEl = form.querySelector('[data-field="' + fieldName + '"]');
-      if (!fieldEl) return;
-      var shouldShow = shouldShowField(fieldName, data);
+      const fieldElement = form.querySelector('[data-field="' + fieldName + '"]');
+      if (!fieldElement) return;
+      const shouldShow = shouldShowField(fieldName, data);
       if (shouldShow) {
-        fieldEl.classList.add('visible');
+        fieldElement.classList.add('visible');
       } else {
-        if (fieldEl.classList.contains('visible')) {
-          clearFieldValue(fieldEl);
+        if (fieldElement.classList.contains('visible')) {
+          clearFieldValue(fieldElement);
         }
-        fieldEl.classList.remove('visible');
+        fieldElement.classList.remove('visible');
       }
     });
 
-    var section5 = document.getElementById('section-operations');
+    const section5 = document.getElementById('section-operations');
     if (section5) {
-      var anyVisible = section5.querySelectorAll('.field.conditional.visible').length > 0;
+      const anyVisible = section5.querySelectorAll('.field.conditional.visible').length > 0;
       section5.classList.toggle('all-hidden', !anyVisible);
     }
   };
@@ -302,17 +304,17 @@
   // -----------------------------------------------------------------
 
   const updateRegionVisibility = (form) => {
-    var data = readForm(form);
-    var regions = data.operating_regions || [];
+    const data = readForm(form);
+    const regions = data.operating_regions || [];
 
-    form.querySelectorAll('[data-show-region]').forEach((el) => {
-      var required = el.dataset.showRegion;
+    form.querySelectorAll('[data-show-region]').forEach((element) => {
+      const required = element.dataset.showRegion;
       if (regions.indexOf(required) !== -1) {
-        el.classList.remove('hidden-by-region');
+        element.classList.remove('hidden-by-region');
       } else {
         // Hide it and clear any selected value so it can't sneak through on submit
-        el.classList.add('hidden-by-region');
-        var input = el.querySelector('input');
+        element.classList.add('hidden-by-region');
+        const input = element.querySelector('input');
         if (input && input.checked) input.checked = false;
       }
     });
@@ -323,25 +325,25 @@
   // business types (law firm, MSP, consulting, etc.) and the "Show all"
   // toggle both bypass this filter.
   const updateBusinessTypeDataVisibility = (form) => {
-    var businessTypeEl = form.querySelector('[name="business_type"]');
-    var businessType = businessTypeEl ? businessTypeEl.value : '';
-    var showAllEl = form.querySelector('#show-all-data-types');
-    var showAll = showAllEl ? showAllEl.checked : false;
+    const businessTypeElement= form.querySelector('[name="business_type"]');
+    const businessType = businessTypeElement? businessTypeElement.value : '';
+    const showAllElement= form.querySelector('#show-all-data-types');
+    const showAll = showAllElement? showAllElement.checked : false;
 
-    var bypass = showAll || !businessType ||
+    const bypass = showAll || !businessType ||
       BROAD_SCOPE_BUSINESS_TYPES.indexOf(businessType) !== -1;
 
     Object.keys(DATA_TYPE_RELEVANCE).forEach((dataType) => {
-      var optionEl = form.querySelector('input[name="data_types"][value="' + dataType + '"]');
-      if (!optionEl) return;
-      var wrapper = optionEl.closest('.option');
+      const optionElement= form.querySelector('input[name="data_types"][value="' + dataType + '"]');
+      if (!optionElement) return;
+      const wrapper = optionElement.closest('.option');
       if (!wrapper) return;
 
       if (bypass || DATA_TYPE_RELEVANCE[dataType].indexOf(businessType) !== -1) {
         wrapper.classList.remove('hidden-by-business-type');
       } else {
         wrapper.classList.add('hidden-by-business-type');
-        if (optionEl.checked) optionEl.checked = false;
+        if (optionElement.checked) optionElement.checked = false;
       }
     });
   };
@@ -351,10 +353,16 @@
   // -----------------------------------------------------------------
 
   const readForm = (form) => {
-    var data = {};
-    var multiFields = ['operating_regions', 'us_states', 'data_types', 'customer_types', 'contracts', 'provider_role'];
+    const data = {};
+    const multiFields = 
+      ['operating_regions', 
+       'us_states', 
+       'data_types', 
+       'customer_types', 
+       'contracts', 
+       'provider_role'];
 
-    var fd = new FormData(form);
+    const fd = new FormData(form);
     fd.forEach((value, key) => {
       if (multiFields.indexOf(key) === -1) {
         data[key] = value;
@@ -363,7 +371,7 @@
 
     multiFields.forEach((field) => {
       data[field] = Array.from(form.querySelectorAll('input[name="' + field + '"]:checked'))
-        .map((el) => { return el.value; });
+        .map((element) => { return element.value; });
     });
 
     // Derive `industry` from `business_type` so existing framework triggers
@@ -382,17 +390,23 @@
   const evaluateCondition = (conditions, data) => {
     if (!conditions || Object.keys(conditions).length === 0) return true;
 
-    for (var key in conditions) {
+    let expected;
+    let field;
+    let value;
+    let field2;
+    let value2;
+
+    for (let key in conditions) {
       if (!Object.prototype.hasOwnProperty.call(conditions, key)) continue;
-      var expected = conditions[key];
+      expected = conditions[key];
 
       if (key.endsWith('_includes')) {
-        var field = key.slice(0, -'_includes'.length);
-        var value = data[field];
+        field = key.slice(0, -'_includes'.length);
+        value = data[field];
         if (!Array.isArray(value) || value.indexOf(expected) === -1) return false;
       } else if (key.endsWith('_in')) {
-        var field2 = key.slice(0, -'_in'.length);
-        var value2 = data[field2];
+        field2 = key.slice(0, -'_in'.length);
+        value2 = data[field2];
         if (!Array.isArray(expected) || expected.indexOf(value2) === -1) return false;
       } else {
         if (data[key] !== expected) return false;
@@ -402,9 +416,9 @@
   };
 
   const evaluateFramework = (framework, data) => {
-    var tier = null;
-    var reasons = [];
-    var tierPriority = { definite: 3, likely: 2, consider: 1 };
+    let tier = null;
+    const reasons = [];
+    const tierPriority = { definite: 3, likely: 2, consider: 1 };
 
     framework.evaluators.forEach((ev) => {
       if (evaluateCondition(ev.conditions, data)) {
@@ -417,9 +431,9 @@
 
     if (!tier) return null;
 
-    var winningReasons = reasons
-      .filter((r) => { return tierPriority[r.level] >= tierPriority[tier]; })
-      .map((r) => { return r.reason; });
+    const winningReasons = reasons
+      .filter((reason) => { return tierPriority[reason.level] >= tierPriority[tier]; })
+      .map((reason) => { return reason.reason; });
 
     return {
       framework: framework,
@@ -437,11 +451,13 @@
       return 'Please select at least one operating region in section 1 before generating.';
     }
 
-    var requiredAlways = ['business_type', 'public_status'];
-    for (var i = 0; i < requiredAlways.length; i++) {
-      var f = requiredAlways[i];
-      if (!data[f]) {
-        return 'Please complete the ' + f.replace(/_/g, ' ') + ' field before generating.';
+    const requiredAlways = ['business_type', 'public_status'];
+    let field;
+
+    for (let i = 0; i < requiredAlways.length; i++) {
+      field = requiredAlways[i];
+      if (!data[field]) {
+        return 'Please complete the ' + field.replace(/_/g, ' ') + ' field before generating.';
       }
     }
 
@@ -450,19 +466,22 @@
       return 'Please answer the "Data handled" question. Select "None of the above" if no sensitive data is handled.';
     }
 
-    var conditionalRequired = ['revenue', 'employees', 'card_handling', 'critical_infra'];
-    for (var j = 0; j < conditionalRequired.length; j++) {
-      var cf = conditionalRequired[j];
-      var fieldEl = form.querySelector('[data-field="' + cf + '"]');
-      if (fieldEl && fieldEl.classList.contains('visible') && !data[cf]) {
+    const conditionalRequired = ['revenue', 'employees', 'card_handling', 'critical_infra'];
+    let cf;
+    let fieldElement;
+
+    for (let j = 0; j < conditionalRequired.length; j++) {
+      cf = conditionalRequired[j];
+      fieldElement = form.querySelector('[data-field="' + cf + '"]');
+      if (fieldElement && fieldElement.classList.contains('visible') && !data[cf]) {
         return 'Please complete the ' + cf.replace(/_/g, ' ') + ' field before generating.';
       }
     }
 
     // provider_role: when visible, requires explicit selection (has "Not a service provider..." option)
-    var providerEl = form.querySelector('[data-field="provider_role"]');
-    if (providerEl && 
-        providerEl.classList.contains('visible') && 
+    const providerElement= form.querySelector('[data-field="provider_role"]');
+    if (providerElement&& 
+        providerElement.classList.contains('visible') && 
         (!data.provider_role || data.provider_role.length === 0)
        ) {
       return 'Please answer the service provider role question. Select ' +
@@ -476,24 +495,24 @@
   // RENDERING
   // -----------------------------------------------------------------
 
-  var TIER_META = {
+  const TIER_META = {
     definite: { label: 'Definitely applies', screenSummary: 'definitely apply', order: 1 },
     likely:   { label: 'Likely applies',     screenSummary: 'likely apply',     order: 2 },
     consider: { label: 'Recommended',         screenSummary: 'recommended',      order: 3 }
   };
 
-  const formatDate = (d) => {
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const populatePrintReportHeader = (clientName, mspName, totalCount, grouped) => {
     // Fill in the print-only report header fields
-    var clientRow = document.querySelector('.report-client-row');
-    var clientSpan = document.querySelector('.report-client');
-    var mspRow = document.querySelector('.report-msp-row');
-    var mspSpan = document.querySelector('.report-msp');
-    var dateSpan = document.querySelector('.report-date');
-    var summarySpan = document.querySelector('.report-summary');
+    const clientRow = document.querySelector('.report-client-row');
+    const clientSpan = document.querySelector('.report-client');
+    const mspRow = document.querySelector('.report-msp-row');
+    const mspSpan = document.querySelector('.report-msp');
+    const dateSpan = document.querySelector('.report-date');
+    const summarySpan = document.querySelector('.report-summary');
 
     if (clientName) {
       clientSpan.textContent = clientName;
@@ -513,7 +532,7 @@
 
     dateSpan.textContent = formatDate(new Date());
 
-    var summaryParts = [];
+    const summaryParts = []; 
     summaryParts.push(totalCount + ' framework' + (totalCount === 1 ? '' : 's') + ' identified');
     if (grouped.definite.length) summaryParts.push(grouped.definite.length + ' definitely apply');
     if (grouped.likely.length) summaryParts.push(grouped.likely.length + ' likely apply');
@@ -522,7 +541,7 @@
   };
 
   const renderResults = (matches, clientName, mspName) => {
-    var wrapper = document.getElementById('results-content-wrapper');
+    const wrapper = document.getElementById('results-content-wrapper');
 
     if (matches.length === 0) {
       wrapper.innerHTML = 
@@ -536,15 +555,15 @@
       return;
     }
 
-    var grouped = { definite: [], likely: [], consider: [] };
-    matches.forEach((m) => { grouped[m.tier].push(m); });
+    const grouped = { definite: [], likely: [], consider: [] };
+    matches.forEach((match) => { grouped[match.tier].push(match); });
 
-    var html = '<div class="results-content">';
+    let html = '<div class="results-content">';
 
     html += '<div class="results-header">';
 
     // Eyebrow: date plus optional "Prepared by" hint
-    var eyebrowText = 'Compliance Profile · ' + formatDate(new Date());
+    let eyebrowText = 'Compliance Profile · ' + formatDate(new Date());
     if (mspName) eyebrowText += ' · Prepared by ' + mspName;
     html += '<p class="results-eyebrow">' + escapeHtml(eyebrowText) + '</p>';
 
@@ -570,7 +589,7 @@
     html += '</div>';
 
     ['definite', 'likely', 'consider'].forEach((tier) => {
-      var entries = grouped[tier];
+      let entries = grouped[tier];
       if (entries.length === 0) return;
       html += '<div class="tier">';
       html += '<div class="tier-header">';
@@ -578,7 +597,7 @@
       html += '<h3 class="tier-name">' + TIER_META[tier].label + '</h3>';
       html += '<span class="tier-count">' + entries.length + '</span>';
       html += '</div>';
-      entries.forEach((m) => { html += renderFrameworkCard(m, tier); });
+      entries.forEach((match) => { html += renderFrameworkCard(match, tier); });
       html += '</div>';
     });
 
@@ -589,28 +608,28 @@
   };
 
   const renderFrameworkCard = (match, tier) => {
-    var fw = match.framework;
-    var html = '<article class="framework-card ' + tier + '">';
-    html += '<h4 class="framework-name">' + escapeHtml(fw.name) + '</h4>';
+    const framework = match.framework;
+    let html = '<article class="framework-card ' + tier + '">';
+    html += '<h4 class="framework-name">' + escapeHtml(framework.name) + '</h4>';
     html += '<div class="framework-meta">';
-    html += '<span>' + escapeHtml(fw.category) + '</span>';
-    html += '<a href="' + fw.reference_url + '" target="_blank" rel="noopener">Reference</a>';
+    html += '<span>' + escapeHtml(framework.category) + '</span>';
+    html += '<a href="' + framework.reference_url + '" target="_blank" rel="noopener">Reference</a>';
     html += '</div>';
-    html += '<p class="framework-desc">' + escapeHtml(fw.description) + '</p>';
+    html += '<p class="framework-desc">' + escapeHtml(framework.description) + '</p>';
 
     if (match.reasons.length) {
       html += '<div class="reasons-label">Why this applies</div>';
       html += '<ul class="reasons-list">';
-      match.reasons.forEach((r) => {
-        html += '<li>' + escapeHtml(r) + '</li>';
+      match.reasons.forEach((reason) => {
+        html += '<li>' + escapeHtml(reason) + '</li>';
       });
       html += '</ul>';
     }
 
-    if (fw.first_steps && fw.first_steps.length) {
+    if (framework.first_steps && framework.first_steps.length) {
       html += '<div class="first-steps-label">Where to start</div>';
       html += '<ul class="first-steps-list">';
-      fw.first_steps.forEach((step) => {
+      framework.first_steps.forEach((step) => {
         html += '<li>' + escapeHtml(step) + '</li>';
       });
       html += '</ul>';
@@ -634,23 +653,23 @@
   // SHAREABLE URL (encode/decode profile via base64 in hash)
   // -----------------------------------------------------------------
 
-  var SCHEMA_VERSION = 2;
+  const SCHEMA_VERSION = 2;
 
   const encodeProfileToHash = (data) => {
-    var payload = { v: SCHEMA_VERSION, profile: data };
-    var json = JSON.stringify(payload);
+    const payload = { v: SCHEMA_VERSION, profile: data };
+    const json = JSON.stringify(payload);
     // Unicode-safe base64
-    var b64 = btoa(unescape(encodeURIComponent(json)));
+    const b64 = btoa(unescape(encodeURIComponent(json)));
     return '#p=' + b64;
   };
 
   const decodeProfileFromHash = () => {
-    var hash = window.location.hash || '';
+    const hash = window.location.hash || '';
     if (hash.indexOf('#p=') !== 0) return null;
     try {
-      var b64 = hash.substring(3);
-      var json = decodeURIComponent(escape(atob(b64)));
-      var payload = JSON.parse(json);
+      const b64 = hash.substring(3);
+      const json = decodeURIComponent(escape(atob(b64)));
+      const payload = JSON.parse(json);
       if (payload.v !== SCHEMA_VERSION) {
         // console.warn('Profile URL schema version mismatch:', payload.v);
         return null;
@@ -669,7 +688,7 @@
 
   const updateUrlHash = (data) => {
     try {
-      var hash = encodeProfileToHash(data);
+      const hash = encodeProfileToHash(data);
       // replaceState avoids polluting browser history
       history.replaceState(null, '', hash);
     } catch {
@@ -688,23 +707,28 @@
   const applyProfileToForm = (form, profile) => {
     if (!profile || typeof profile !== 'object') return;
 
+    let value;
+    let checkbox;
+    let radio;
+    let input;
+
     Object.keys(profile).forEach((name) => {
-      var value = profile[name];
+      value = profile[name];
 
       if (Array.isArray(value)) {
         // Multi-value (checkboxes)
         value.forEach((v) => {
-          var cb = form.querySelector('[name="' + name + '"][value="' + cssEscape(String(v)) + '"]');
-          if (cb) cb.checked = true;
+          checkbox = form.querySelector('[name="' + name + '"][value="' + cssEscape(String(v)) + '"]');
+          if (checkbox) checkbox.checked = true;
         });
       } else if (typeof value === 'string' && value.length) {
         // Try radio match first (named radio groups have multiple inputs)
-        var radio = form.querySelector('[name="' + name + '"][type="radio"][value="' + cssEscape(value) + '"]');
+        radio = form.querySelector('[name="' + name + '"][type="radio"][value="' + cssEscape(value) + '"]');
         if (radio) {
           radio.checked = true;
         } else {
           // Otherwise it's a select or text input
-          var input = form.querySelector(
+          input = form.querySelector(
             'select[name="' + name + '"], input[name="' + name + '"]:not([type="radio"]):not([type="checkbox"])'
           );
           if (input) input.value = value;
@@ -722,18 +746,18 @@
   // LAST RESULTS STORAGE (so post-render buttons can access data)
   // -----------------------------------------------------------------
 
-  var lastResults = { matches: [], clientName: '', mspName: '' };
+  let lastResults = { matches: [], clientName: '', mspName: '' };
 
   // -----------------------------------------------------------------
   // GLOBAL BUTTON HANDLERS (exposed for inline onclick)
   // -----------------------------------------------------------------
 
   window.copyShareLink = (btn) => {
-    var url = window.location.href;
-    var revertLabel = () => {
+    const url = window.location.href;
+    const revertLabel = () => {
       if (btn) btn.textContent = 'Copy share link';
     };
-    var showCopied = () => {
+    const showCopied = () => {
       if (btn) {
         btn.textContent = 'Copied!';
         setTimeout(revertLabel, 2000);
@@ -756,40 +780,40 @@
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    var form = e.target;
-    var data = readForm(form);
+    const form = e.target;
+    const data = readForm(form);
 
-    var error = validate(data, form);
+    const error = validate(data, form);
     if (error) {
       alert(error);
       return;
     }
 
-    var clientName = (data.company_name || '').trim();
-    var mspName = (data.msp_name || '').trim();
+    const clientName = (data.company_name || '').trim();
+    const mspName = (data.msp_name || '').trim();
 
-    var matches = window.COMPLIANCE_DATA.frameworks
-      .map((fw) => { return evaluateFramework(fw, data); })
-      .filter((m) => { return m !== null; });
+    let matches = window.COMPLIANCE_DATA.frameworks
+      .map((framework) => { return evaluateFramework(framework, data); })
+      .filter((match) => { return match !== null; });
 
     // Apply suppression: if a framework declares `suppressed_by: [...]` & any of those IDs are in the matches, drop it.
-    var matchIds = matches.map((m) => { return m.framework.id; });
-    matches = matches.filter((m) => {
-      var suppressors = m.framework.suppressed_by;
+    const matchIds = matches.map((match) => { return match.framework.id; });
+    matches = matches.filter((match) => {
+      const suppressors = match.framework.suppressed_by;
       if (!Array.isArray(suppressors) || !suppressors.length) return true;
       return !suppressors.some((id) => { return matchIds.indexOf(id) !== -1; });
     });
 
     // Apply baseline suppression: if any framework flagged `is_baseline: true` fires at definite
     // or likely tier, drop generic baselines flagged `suppressed_by_baseline: true` (e.g., CIS, NIST CSF).
-    var baselineApplies = matches.some((m) => {
-      return m.framework.is_baseline && (m.tier === 'definite' || m.tier === 'likely');
+    const baselineApplies = matches.some((match) => {
+      return match.framework.is_baseline && (match.tier === 'definite' || match.tier === 'likely');
     });
     if (baselineApplies) {
-      matches = matches.filter((m) => { return !m.framework.suppressed_by_baseline; });
+      matches = matches.filter((match) => { return !match.framework.suppressed_by_baseline; });
     }
 
-    var tierOrder = { definite: 0, likely: 1, consider: 2 };
+    const tierOrder = { definite: 0, likely: 1, consider: 2 };
     matches.sort((a, b) => {
       if (tierOrder[a.tier] !== tierOrder[b.tier]) {
         return tierOrder[a.tier] - tierOrder[b.tier];
@@ -812,7 +836,7 @@
   };
 
   const resetPlaceholder = () => {
-    var wrapper = document.getElementById('results-content-wrapper');
+    let wrapper = document.getElementById('results-content-wrapper');
     wrapper.innerHTML = '<div class="results-placeholder">' +
       '<img class="placeholder-mark placeholder-mark-light" src="assets/Dark_Blue.svg" alt="">' +
       '<img class="placeholder-mark placeholder-mark-dark" src="assets/Bright_Blue.svg" alt="">' +
@@ -830,7 +854,7 @@
   };
 
   const handleReset = (e) => {
-    var form = e.target;
+    const form = e.target;
     setTimeout(() => {
       updateRegionVisibility(form);
       updateBusinessTypeDataVisibility(form);
@@ -863,30 +887,45 @@
   };
 
   const getOptionLabel = (form, name, value) => {
-    var sel = form.querySelector('select[name="' + name + '"] option[value="' + value + '"]');
+    const sel = form.querySelector('select[name="' + name + '"] option[value="' + value + '"]');
     if (sel) return sel.textContent.trim();
-    var input = form.querySelector('input[name="' + name + '"][value="' + value + '"]');
+    const input = form.querySelector('input[name="' + name + '"][value="' + value + '"]');
     if (!input) return value;
-    var labelEl = input.closest('.option');
-    if (labelEl) {
-      var span = labelEl.querySelector('span');
+    const labelElement= input.closest('.option');
+    if (labelElement) {
+      const span = labelElement.querySelector('span');
       if (span) return span.textContent.trim();
     }
     return value;
   };
 
-  const stripParen = (s) => {
-    return s.replace(/\s*\(.+?\)/g, '').trim();
+  const stripParentheses = (str) => {
+    return str.replace(/\s*\(.+?\)/g, '').trim();
   };
 
   const getSectionSummary = (form, num) => {
-    var data = readForm(form);
-    var labels, parts;
+    const data = readForm(form);
+    //case 1
+    let regions;
+    let labels;
+    //case 2
+    let parts;
+    //case 3
+    let types;
+    //case 4
+    let customers;
+    let contracts;
+    let sum;
+    //case 5
+    let roles;
+
     switch (num) {
       case 1:
-        var regions = data.operating_regions || [];
+        regions = data.operating_regions || [];
         if (!regions.length) return '';
-        labels = regions.map((r) => { return getOptionLabel(form, 'operating_regions', r); }).map(stripParen);
+        labels = regions
+          .map((region) => { return getOptionLabel(form, 'operating_regions', region); })
+          .map(stripParentheses);
         if (labels.length > 6) return labels.length + ' regions';
         return labels.join(', ');
       case 2:
@@ -895,17 +934,20 @@
         if (data.public_status) parts.push(getOptionLabel(form, 'public_status', data.public_status));
         return parts.join(' \u00B7 ');
       case 3:
-        var types = data.data_types || [];
+        types = data.data_types || [];
         if (!types.length) return '';
-        labels = types.map((t) => { return getOptionLabel(form, 'data_types', t); }).map(stripParen);
+        labels = types.map((type) => { return getOptionLabel(form, 'data_types', type); }).map(stripParentheses);
         if (labels.length > 6) return labels.length + ' data types';
         return labels.join(', ');
       case 4:
-        var customers = data.customer_types || [];
-        var contracts = data.contracts || [];
-        var sum = '';
+        customers = data.customer_types || [];
+        contracts = data.contracts || [];
+        sum = '';
         if (customers.length) {
-          var custLabels = customers.map((c) => { return getOptionLabel(form, 'customer_types', c); }).map(stripParen);
+          const custLabels = 
+            customers
+              .map((customer) => { return getOptionLabel(form, 'customer_types', customer); })
+              .map(stripParentheses);
           if (custLabels.length > 6) sum += custLabels.length + ' customer types';
           else sum += custLabels.join(', ');
         }
@@ -914,9 +956,11 @@
         }
         return sum;
       case 5:
-        var roles = data.provider_role || [];
+        roles = data.provider_role || [];
         if (!roles.length) return '';
-        labels = roles.map((r) => { return getOptionLabel(form, 'provider_role', r); }).map(stripParen);
+        labels = roles
+          .map((role) => { return getOptionLabel(form, 'provider_role', role); })
+          .map(stripParentheses);
         if (labels.length > 6) return labels.length + ' roles';
         return labels.join(', ');
     }
@@ -937,46 +981,46 @@
   const isSectionValid = (form, num) => {
     // Only section 2 has required fields. Others are always valid (can advance without selections).
     if (num === 2) {
-      var data = readForm(form);
+      const data = readForm(form);
       return !!(data.business_type && data.public_status);
     }
     return true;
   };
 
   const refreshSectionSummary = (form, num) => {
-    var section = getSection(form, num);
+    const section = getSection(form, num);
     if (!section) return;
-    var data = readForm(form);
+    const data = readForm(form);
     if (sectionHasAnswers(data, num)) {
       section.classList.add('complete');
     } else {
       section.classList.remove('complete');
     }
-    var summarySpan = section.querySelector('.section-summary');
+    const summarySpan = section.querySelector('.section-summary');
     if (summarySpan) {
       summarySpan.textContent = getSectionSummary(form, num);
     }
   };
 
   const refreshAllSectionSummaries = (form) => {
-    for (var i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 5; i++) {
       refreshSectionSummary(form, i);
     }
   };
 
   const updateContinueButtonStates = (form) => {
     // Only section 2 has required fields; its Continue button gates on those
-    var section2 = getSection(form, 2);
+    const section2 = getSection(form, 2);
     if (section2) {
-      var btn = section2.querySelector('.section-continue-btn');
+      const btn = section2.querySelector('.section-continue-btn');
       if (btn) btn.disabled = !isSectionValid(form, 2);
     }
   };
 
   const advanceFromSection = (form, currentNum) => {
     if (!isSectionValid(form, currentNum)) return;
-    var current = getSection(form, currentNum);
-    var next = getSection(form, currentNum + 1);
+    const current = getSection(form, currentNum);
+    const next = getSection(form, currentNum + 1);
     if (current) {
       setSectionState(current, 'collapsed');
       refreshSectionSummary(form, currentNum);
@@ -991,14 +1035,14 @@
   };
 
   const expandSection = (form, section) => {
-    var current = form.querySelector('.section.active');
+    const current = form.querySelector('.section.active');
     if (current && current !== section) {
       setSectionState(current, 'collapsed');
-      var curNum = parseInt(current.dataset.section, 10);
+      const curNum = parseInt(current.dataset.section, 10);
       refreshSectionSummary(form, curNum);
     }
     setSectionState(section, 'active');
-    var num = parseInt(section.dataset.section, 10);
+    const num = parseInt(section.dataset.section, 10);
     refreshSectionSummary(form, num);
     setTimeout(() => {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1008,16 +1052,16 @@
   const initSectionStates = (form, hasSharedProfile) => {
     if (hasSharedProfile) {
       // URL hash carries answers - show all collapsed with summaries
-      for (var i = 1; i <= 5; i++) {
-        var s = getSection(form, i);
-        if (s) setSectionState(s, 'collapsed');
+      for (let i = 1; i <= 5; i++) {
+        const section = getSection(form, i);
+        if (section) setSectionState(section, 'collapsed');
       }
     } else {
       // Fresh: section 1 active, rest future
-      for (var j = 1; j <= 5; j++) {
-        var sj = getSection(form, j);
-        if (!sj) continue;
-        setSectionState(sj, j === 1 ? 'active' : 'future');
+      for (let j = 1; j <= 5; j++) {
+        const sectionJ = getSection(form, j);
+        if (!sectionJ) continue;
+        setSectionState(sectionJ, j === 1 ? 'active' : 'future');
       }
     }
     refreshAllSectionSummaries(form);
@@ -1028,7 +1072,7 @@
       legend.addEventListener('click', (e) => {
         // Don't fire if user clicked something interactive inside the legend
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
-        var section = legend.closest('.section');
+        const section = legend.closest('.section');
         if (!section) return;
         if (section.classList.contains('active')) {
           setSectionState(section, 'collapsed');
@@ -1043,7 +1087,7 @@
       btn.addEventListener('click', () => {
         // Section 5's button is type="submit"; let form submit handler run
         if (btn.type === 'submit') return;
-        var section = btn.closest('.section');
+        const section = btn.closest('.section');
         if (!section) return;
         advanceFromSection(form, parseInt(section.dataset.section, 10));
       });
@@ -1057,19 +1101,19 @@
   // LOGO UPLOAD (stored in localStorage, embedded in PDF)
   // -----------------------------------------------------------------
 
-  var LOGO_STORAGE_KEY = 'blacksmith_msp_logo_v1';
-  var LOGO_ASPECT_KEY = 'blacksmith_msp_logo_aspect_v1';
+  const LOGO_STORAGE_KEY = 'blacksmith_msp_logo_v1';
+  const LOGO_ASPECT_KEY = 'blacksmith_msp_logo_aspect_v1';
 
   const initLogoUpload = () => {
-    var uploadBtn = document.getElementById('logo-upload-btn');
-    var input = document.getElementById('logo-input');
-    var preview = document.getElementById('logo-preview');
-    var thumb = document.getElementById('logo-thumb');
-    var removeBtn = document.getElementById('logo-remove');
+    const uploadBtn = document.getElementById('logo-upload-btn');
+    const input = document.getElementById('logo-input');
+    const preview = document.getElementById('logo-preview');
+    const thumb = document.getElementById('logo-thumb');
+    const removeBtn = document.getElementById('logo-remove');
     if (!uploadBtn || !input || !preview || !thumb || !removeBtn) return;
 
     try {
-      var existing = localStorage.getItem(LOGO_STORAGE_KEY);
+      const existing = localStorage.getItem(LOGO_STORAGE_KEY);
       if (existing) {
         thumb.src = existing;
         preview.classList.remove('hidden');
@@ -1086,16 +1130,16 @@
     uploadBtn.addEventListener('click', () => { input.click(); });
 
     input.addEventListener('change', (e) => {
-      var file = e.target.files[0];
+      const file = e.target.files[0];
       if (!file) return;
       if (file.size > 1024 * 1024) {
         alert('Logo file is too large. Please use a file under 1 MB.');
         input.value = '';
         return;
       }
-      var reader = new FileReader();
-      reader.onload = (ev) => {
-        var dataUrl = ev.target.result;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target.result;
         if (file.type === 'image/svg+xml') {
           svgToPng(dataUrl, (pngDataUrl, aspect) => {
             storeLogo(pngDataUrl, aspect);
@@ -1143,33 +1187,33 @@
   };
 
   const getImageAspect = (dataUrl, callback) => {
-    var img = new Image();
+    const img = new Image();
     img.onload = () => {
-      var a = (img.naturalWidth && img.naturalHeight) ? img.naturalWidth / img.naturalHeight : 1;
-      callback(a);
+      const imgDimensionRatio = (img.naturalWidth && img.naturalHeight) ? img.naturalWidth / img.naturalHeight : 1;
+      callback(imgDimensionRatio);
     };
     img.onerror = () => { callback(1); };
     img.src = dataUrl;
   };
 
   const svgToPng = (svgDataUrl, callback, errorCallback) => {
-    var img = new Image();
+    const img = new Image();
     img.onload = () => {
       try {
-        var w = img.naturalWidth || 300;
-        var h = img.naturalHeight || 300;
-        var maxDim = 400;
-        if (w > maxDim || h > maxDim) {
-          var scale = Math.min(maxDim / w, maxDim / h);
-          w = Math.round(w * scale);
-          h = Math.round(h * scale);
+        let width = img.naturalWidth || 300;
+        let height = img.naturalHeight || 300;
+        const maxDim = 400;
+        if (width > maxDim || height > maxDim) {
+          const scale = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
         }
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        callback(canvas.toDataURL('image/png'), w / h);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/png'), width / height);
       } catch (err) {
         if (errorCallback) errorCallback(err.message || 'conversion failed');
       }
@@ -1185,7 +1229,7 @@
   // -----------------------------------------------------------------
 
   document.addEventListener('DOMContentLoaded', () => {
-    var form = document.getElementById('profile-form');
+    const form = document.getElementById('profile-form');
     if (form) {
       form.addEventListener('submit', handleSubmit);
       form.addEventListener('reset', handleReset);
@@ -1198,7 +1242,7 @@
         updateContinueButtonStates(form);
       });
 
-      var sharedProfile = decodeProfileFromHash();
+      const sharedProfile = decodeProfileFromHash();
       if (sharedProfile) {
         applyProfileToForm(form, sharedProfile);
       }
@@ -1215,14 +1259,14 @@
           if (form.requestSubmit) {
             form.requestSubmit();
           } else {
-            var evt = new Event('submit', { cancelable: true, bubbles: true });
+            const evt = new Event('submit', { cancelable: true, bubbles: true });
             form.dispatchEvent(evt);
           }
         }, 0);
       }
     }
 
-    var themeBtn = document.getElementById('theme-toggle');
+    const themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) {
       themeBtn.addEventListener('click', toggleTheme);
     }
