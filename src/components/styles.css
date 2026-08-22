@@ -1,4 +1,4 @@
-/* =================================================================
+﻿/* =================================================================
    Compliance Profile Generator
    Built for Blacksmith InfoSec
    -----------------------------------------------------------------
@@ -155,6 +155,40 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  padding: 1.5rem;
+  min-height: 100vh;
+  background: var(--bg);
+  transition: background 0.3s;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 0.5rem;
+  }
+}
+
+.panel {
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.app-panel.panel {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .app-panel.panel {
+    margin: 1rem;
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
 }
 
 img, svg { display: block; max-width: 100%; }
@@ -401,8 +435,6 @@ a:hover {
   gap: var(--space-5);
 }
 
-.profile-identifier-field { }
-
 .profile-identifier-label {
   display: block;
   font-size: 12px;
@@ -531,10 +563,6 @@ a:hover {
   width: 14px;
 }
 
-.section.complete .section-check {
-  visibility: visible;
-}
-
 .section-summary {
   display: none;
   font-size: 14px;
@@ -543,43 +571,44 @@ a:hover {
   line-height: 1.5;
   margin-top: var(--space-2);
   /* Clamp to 3 lines max */
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.section.collapsed > .section-summary:not(:empty) {
+.form-section.collapsed > .section-summary:not(:empty) {
   display: -webkit-box;
 }
 
-.section.active {
+.form-section.active {
   border-color: #0086B7;
   border-width: 2px;
   padding: calc(var(--space-6) - 1px);
 }
 
-.section.collapsed > *:not(.section-legend):not(.section-summary),
+.form-section.collapsed > *:not(.section-legend):not(.section-summary),
 .section.future > *:not(.section-legend) {
   display: none !important;
 }
 
-.section.collapsed .section-legend,
-.section.future .section-legend {
+.form-section.collapsed .section-legend,
+.form-section.future .section-legend {
   margin-bottom: 0;
 }
 
-.section.collapsed,
-.section.future {
+.form-section.collapsed,
+.form-section.future {
   padding-top: var(--space-4);
   padding-bottom: var(--space-4);
 }
 
-.section.future {
+.form-section.future {
   opacity: 0.55;
   border-style: dashed;
 }
 
-.section.future .section-summary {
+.form-section.future .section-summary {
   display: none;
 }
 

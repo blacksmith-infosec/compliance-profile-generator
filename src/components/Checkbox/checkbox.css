@@ -1,0 +1,146 @@
+/* Custom Checkbox Styles */
+.custom-checkbox {
+  position: relative;
+  width: 100%;
+}
+
+.custom-checkbox-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  /* transition: all 0.2s; */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  font-family: inherit;
+}
+
+.custom-checkbox-button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.custom-checkbox-button:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.custom-checkbox-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.custom-checkbox.answered .custom-checkbox-button {
+  border-color: var(--success);
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
+}
+
+.custom-checkbox-button-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-checkbox-button-text:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.6;
+}
+
+/* .custom-checkbox-arrow {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.custom-checkbox-arrow.open {
+  transform: rotate(180deg);
+} */
+
+.custom-checkbox-list {
+  /* position: absolute; */
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  /* max-height: 300px; */
+  /* overflow-y: auto; */
+  z-index: 1000;
+  /* animation: slideDown 0.2s ease; */
+}
+
+.custom-checkbox.answered .custom-checkbox-list {
+  border-color: var(--success);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-checkbox-option {
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text);
+}
+
+.custom-checkbox-option:hover,
+.custom-checkbox-option.focused {
+  background: var(--surface-2);
+  color: var(--accent-text);
+}
+
+.custom-checkbox-option.selected {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.custom-checkbox-option.selected:hover,
+.custom-checkbox-option.selected.focused {
+  background: var(--accent-hot);
+}
+
+.custom-checkbox-option.group {
+  font-weight: bolder;
+}
+
+/* Scrollbar styling for checkbox list */
+.custom-checkbox-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-checkbox-list::-webkit-scrollbar-track {
+  background: var(--surface-2);
+  border-radius: 4px;
+}
+
+.custom-checkbox-list::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+.custom-checkbox-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+}

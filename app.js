@@ -20,7 +20,7 @@
 
   const setTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('bs-theme', theme); } catch {
+    try { localStorage.setItem('theme', theme); } catch {
       //set up error handling
     }
   };
