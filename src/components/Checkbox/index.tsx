@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './checkbox.css';
 import '../styles.css';
-import { FieldOptionProps, FieldGroupOptionProps, FieldOptions, FormAnswer, isGrouped } from '../Form/form.d.tsx';
+import { FieldOptionProps, FieldOptions, FormAnswer, isGrouped } from '../Form/form.d.tsx';
 
 export interface CheckboxProps {
   id?: string;
@@ -18,7 +18,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   values,
   onChange,
   options,
-  placeholder = 'Select an option...',
   className = '',
   disabled = false,
 }) => {
@@ -53,11 +52,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({
     )
   );
 
-  const selectedOptions = allOptions.filter(
-    (option): option is FieldOptionProps => {
-      return option.value in values;}
-  ); //redundant to values
-
   // Close checkbox when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,7 +82,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           setIsOpen(true);
           setFocusedIndex(0);
         } else if (focusedIndex >= 0) {
-          const focused = allDisplay[focusedIndex]
+          const focused = allDisplay[focusedIndex];
           if (!(focused.group)) {
             handleSelect({
               value: focused.value,
@@ -155,6 +149,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           className={'custom-checkbox-list'}
           role='listbox'
           aria-labelledby={id}
+          onKeyDown={handleKeyDown}
         >
           {allDisplay.map((option, index) => (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events

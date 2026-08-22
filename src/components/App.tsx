@@ -3,7 +3,7 @@ import { Intro } from './Intro';
 import { Footer } from './Footer';
 import Results from './Form/Results';
 import Form from './Form/Form';
-import ComplianceProfileProvider from '../providers/ComplianceProfileProvider'
+import ComplianceProfileProvider from '../providers/ComplianceProfileProvider';
 import ThemeProvider from '../providers/ThemeProvider';
 import './styles.css';
 

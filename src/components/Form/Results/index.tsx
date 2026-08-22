@@ -40,8 +40,12 @@ const Results: React.FC = () => {
           }
         {/* <h2>Results</h2> */}
         {allSectionsComplete
-        ? <p className="placeholder-text">Click Generate Profile to view applicable frameworks.</p>
-        : <p className="placeholder-text">Complete the form to generate a list of likely applicable frameworks and regulations.</p>}
+        ? <p className="placeholder-text">
+            Click Generate Profile to view applicable frameworks.
+          </p>
+        : <p className="placeholder-text">
+            Complete the form to generate a list of likely applicable frameworks and regulations.
+          </p>}
       </section>
     );
   }

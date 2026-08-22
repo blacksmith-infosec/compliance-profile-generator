@@ -30,10 +30,10 @@ export const Form: React.FC<FormProps> = () => {
     resetForm();
     //Reset Focus
     formRef?.current?.parentElement?.scrollIntoView({
-      behavior: "smooth",
-      block: "start", 
+      behavior: 'smooth',
+      block: 'start', 
     });
-  }
+  };
 
   return (
     <form id="profile-form" className="form-pannel" ref={formRef}>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './radio.css';
-import { FieldOptionProps, FieldGroupOptionProps, FieldOptions, FormAnswer, isGrouped } from '../Form/form.d.tsx';
+import { FieldOptionProps, FieldOptions, FormAnswer, isGrouped } from '../Form/form.d.tsx';
 
 export interface RadioProps {
   id?: string;
@@ -17,7 +17,6 @@ export const Radio: React.FC<RadioProps> = ({
   value,
   onChange,
   options,
-  placeholder = 'Select an option...',
   className = '',
   disabled = false,
 }) => {
@@ -49,11 +48,6 @@ const allDisplay = allOptions.map((item) => ({
       0,
       ({ value: 'group', label: itemWithGroup.groupName, group: true , groupName: itemWithGroup.groupName})
     )
-  );
-
-  const selectedOption = allOptions.find(
-    (option): option is FieldOptionProps => {
-      return option.value === value;}
   );
 
   // Close radio when clicking outside
@@ -176,6 +170,7 @@ const allDisplay = allOptions.map((item) => ({
           className='custom-radio-list'
           role='listbox'
           aria-labelledby={id}
+          onKeyDown={handleKeyDown}
         >
           {allDisplay.map((option, index) => (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events

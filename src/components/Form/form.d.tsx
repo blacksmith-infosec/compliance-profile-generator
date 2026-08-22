@@ -23,14 +23,14 @@ export interface FormSectionProps {
 }
 
 export interface FieldCondition {
-  conditionRelation?: "and" | "or";
+  conditionRelation?: 'and' | 'or';
   field: string;
-  operator: "includes" | "equal" | "not equal";
+  operator: 'includes' | 'equal' | 'not equal';
   values: string[];
 }
 
 export interface GroupCondition {
-  conditionRelation?: "and" | "or";
+  conditionRelation?: 'and' | 'or';
   conditions: ConditionItem[]; // This allows nesting
 }
 

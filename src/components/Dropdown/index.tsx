@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './dropdown.css';
 import '../styles.css';
-import { FieldOptionProps, FieldGroupOptionProps, FieldOptions, FormAnswer, isGrouped } from '../Form/form.d.tsx';
+import { FieldOptionProps, FieldOptions, FormAnswer, isGrouped } from '../Form/form.d.tsx';
 
 export interface DropdownProps {
   id?: string;
@@ -33,10 +33,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
       group.options.map((opt) => ({ ...opt, groupName: group.group }))
     )
     : options.map((opt) => ({ ...opt, groupName: '' }));
-
-  const groupFirstOptions = isGrouped(options)
-    ? options.map((group) => ({ groupName: group.group, firstOpt: group.options[0] }))
-    : [];
 
   const allDisplay = allOptions.map((item) => ({
     value: item.value,
@@ -189,7 +185,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events
             <li
               key={option.group ? `group-${index}` : option.value}
-              className={`custom-dropdown-option ${option.group ? 'group' : `${option.value === value ? 'selected' : ''}`
+              className={`custom-dropdown-option ${option.group ? 'group' : `${option.value === value ? 'selected' :''}`
                 } ${index === focusedIndex ? 'focused' : ''}`
               }
               role='option'

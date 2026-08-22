@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   FieldGroupOptionProps,
   FieldOptions,
@@ -73,22 +73,34 @@ export const FormSection: React.FC<FormSectionProps> = ({
     const pair:FormAnswers = {};
     fields
       .filter((field) => evaluateConditions(field.conditions, answers))
-      .forEach((field,index) => {
-        answers[field.id]?.forEach((ans) => {
+      .forEach((field) => {
+        answers[field.id]?.forEach((ans) => 
           pair[field.id] ? pair[field.id].push(ans) : pair[field.id] = [ans]
-        })
+          );
         }
       );
-    const compiled = Object.entries(pair).map((sect) => sect[1].map((topic) => topic.label).join(", ")).join(" \u00B7 ")
-    return compiled
+    const compiled = Object.entries(pair).map((sect) => sect[1].map((topic)=>topic.label).join(', ')).join(' \u00B7 ');
+    return compiled;
   };
 
   const handleContinueClick = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    e.preventDefault()
-
+    e.preventDefault();
     setIndexOfExpandedSection(sectionIndex+1);
     scrollToArea();
-  }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        setIndexOfExpandedSection(sectionIndex);
+        scrollToArea();
+        break;
+    }
+  };
 
   const handleSectionClick = () => {
 
@@ -98,8 +110,8 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
   const scrollToArea = () => {
     formRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start", 
+      behavior: 'smooth',
+      block: 'start', 
     });
   };
 
@@ -111,7 +123,9 @@ export const FormSection: React.FC<FormSectionProps> = ({
       data-section={sectionNum}
       id={id}
     >
-      <legend className='section-legend' onClick={handleSectionClick}>
+      <legend className='section-legend' 
+        onClick={handleSectionClick}
+        onKeyDown={handleKeyDown}>
         <span className='section-marker'>
           <span className="section-check">✓</span>
           <span className="section-number">
@@ -182,7 +196,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
         <button
           type="button"
           className="btn btn-primary btn-small section-continue-btn"
-          onClick={(e) => {handleContinueClick(e)}}>
+          onClick={(e) => {handleContinueClick(e);}}>
           Continue
         </button>
       </div>
