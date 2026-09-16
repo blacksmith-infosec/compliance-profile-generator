@@ -1,0 +1,531 @@
+{
+  "profileIdentifiers": [
+    {
+      "id": "company_name",
+      "type": "text",
+      "label": "Client name",
+      "placeholder": "Client or organization name",
+      "optional": true,
+      "maxLength": 100
+    },
+    {
+      "id": "msp_name",
+      "type": "text",
+      "label": "Prepared by",
+      "placeholder": "Your firm or MSP name",
+      "optional": true,
+      "maxLength": 100
+    },
+    {
+      "id": "logo",
+      "type": "file",
+      "label": "Logo",
+      "optional": true,
+      "accept": ["image/png", "image/jpeg", "image/svg+xml"]
+    }
+  ],
+  "sections": [
+    {
+      "sectionNum": 1,
+      "sectionTitle": "Where you operate",
+      "fields": [
+        {
+          "id": "operating_regions",
+          "type": "checkbox",
+          "fieldLabel": "Operating regions or data subjects",
+          "fieldHelp": "Select all that apply. State and international rules can apply based on resident data, even without physical presence in that jurisdiction.",
+          "conditional": false,
+          "options": [
+            { "value": "us", "label": "United States" },
+            { "value": "eu", "label": "European Union / EEA" },
+            { "value": "uk", "label": "United Kingdom" },
+            { "value": "canada", "label": "Canada" },
+            { "value": "other_intl", "label": "Other international" }
+          ]
+        },
+        {
+          "id": "us_states",
+          "type": "checkbox",
+          "fieldLabel": "US state operations",
+          "fieldHelp": "Showing because US is selected above.",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "operating_regions",
+              "operator": "includes",
+              "values": ["us"]
+            }
+          ],
+          "options": [
+            { "value": "ca", "label": "California" },
+            { "value": "co", "label": "Colorado" },
+            { "value": "ct", "label": "Connecticut" },
+            { "value": "ia", "label": "Iowa" },
+            { "value": "ma", "label": "Massachusetts" },
+            { "value": "ne", "label": "Nebraska" },
+            { "value": "ny", "label": "New York" },
+            { "value": "oh", "label": "Ohio" },
+            { "value": "ok", "label": "Oklahoma" },
+            { "value": "or", "label": "Oregon" },
+            { "value": "tn", "label": "Tennessee" },
+            { "value": "tx", "label": "Texas" },
+            { "value": "ut", "label": "Utah" },
+            { "value": "va", "label": "Virginia" },
+            { "value": "other_us", "label": "Other US states" }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionNum": 2,
+      "sectionTitle": "Organization",
+      "fields": [
+        {
+          "id": "business_type",
+          "type": "dropdown",
+          "fieldLabel": "Type of business",
+          "fieldHelp": null,
+          "conditional": false,
+          "placeholder": "Select a business type",
+          "optionGroups": [
+            {
+              "group": "Accounting & Finance",
+              "options": [
+                { "value": "cpa_firm", "label": "Accounting / CPA firm" },
+                { "value": "tax_prep", "label": "Tax preparation" },
+                { "value": "investment_advisor", "label": "Investment advisor / RIA / wealth management" },
+                { "value": "bank_credit_union", "label": "Bank / credit union" },
+                { "value": "mortgage_broker", "label": "Mortgage broker / lender" },
+                { "value": "insurance_agency", "label": "Insurance agency / brokerage" },
+                { "value": "fintech", "label": "Fintech / payment processor" }
+              ]
+            },
+            {
+              "group": "Healthcare",
+              "options": [
+                { "value": "medical_practice", "label": "Medical practice" },
+                { "value": "dental_practice", "label": "Dental practice" },
+                { "value": "veterinary_practice", "label": "Veterinary practice" },
+                { "value": "mental_health", "label": "Mental / behavioral health practice" },
+                { "value": "pharmacy", "label": "Pharmacy" },
+                { "value": "healthcare_it", "label": "Healthcare IT / health tech vendor" },
+                { "value": "health_insurance", "label": "Health insurance / health plan" },
+                { "value": "pharma_biotech", "label": "Pharmaceutical / biotech / medical device" }
+              ]
+            },
+            {
+              "group": "Legal",
+              "options": [
+                { "value": "law_firm", "label": "Law firm" }
+              ]
+            },
+            {
+              "group": "Education",
+              "options": [
+                { "value": "k12_school", "label": "K-12 school / district" },
+                { "value": "higher_ed", "label": "Higher education (college, university)" }
+              ]
+            },
+            {
+              "group": "Government & Public Sector",
+              "options": [
+                { "value": "federal_civilian_contractor", "label": "Federal civilian contractor" },
+                { "value": "defense_contractor", "label": "Defense contractor / defense industrial base" },
+                { "value": "state_local_government", "label": "State / local / tribal government" },
+                { "value": "nonprofit", "label": "Nonprofit" }
+              ]
+            },
+            {
+              "group": "Technology",
+              "options": [
+                { "value": "saas", "label": "SaaS / software company" },
+                { "value": "msp_services", "label": "MSP / MSSP / IT services" },
+                { "value": "cybersecurity_vendor", "label": "Cybersecurity vendor" },
+                { "value": "other_technology", "label": "Other technology" }
+              ]
+            },
+            {
+              "group": "Retail & Hospitality",
+              "options": [
+                { "value": "retail_store", "label": "Retail store / chain" },
+                { "value": "ecommerce", "label": "E-commerce" },
+                { "value": "restaurant", "label": "Restaurant / food service" },
+                { "value": "hotel", "label": "Hotel / hospitality" }
+              ]
+            },
+            {
+              "group": "Real Estate",
+              "options": [
+                { "value": "real_estate_brokerage", "label": "Real estate brokerage" },
+                { "value": "property_management", "label": "Property management" }
+              ]
+            },
+            {
+              "group": "Professional Services",
+              "options": [
+                { "value": "consulting", "label": "Consulting firm" },
+                { "value": "marketing_agency", "label": "Marketing / advertising / PR" },
+                { "value": "architecture_engineering", "label": "Architecture / engineering" },
+                { "value": "recruiting_staffing", "label": "Recruiting / staffing" }
+              ]
+            },
+            {
+              "group": "Industrial",
+              "options": [
+                { "value": "manufacturing", "label": "Manufacturing" },
+                { "value": "construction", "label": "Construction" },
+                { "value": "energy", "label": "Energy / utilities" },
+                { "value": "transportation", "label": "Transportation / logistics" }
+              ]
+            }
+          ],
+          "ungroupedOptions": [
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "revenue",
+          "type": "dropdown",
+          "fieldLabel": "Annual revenue (USD)",
+          "fieldHelp": "Used for state-specific compliance scoping (CCPA threshold, NY DFS Part 500 tier classification).",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "us_states",
+              "operator": "includes",
+              "values": ["ca"]
+            },
+            {
+              "conditionRelation": "or",
+              "conditions": [
+                {
+                  "field": "us_states",
+                  "operator": "includes",
+                  "values": ["ny"]
+                },
+                {
+                  "conditionRelation": "and",
+                  "field": "industry",
+                  "operator": "includes",
+                  "values": ["financial_services", "insurance"]
+                }
+              ]
+            }
+          ],
+          "placeholder": "Select a range",
+          "options": [
+            { "value": "under_1m", "label": "Under $1M" },
+            { "value": "1m_10m", "label": "$1M to $10M" },
+            { "value": "10m_50m", "label": "$10M to $50M" },
+            { "value": "50m_250m", "label": "$50M to $250M" },
+            { "value": "over_250m", "label": "Over $250M" }
+          ]
+        },
+        {
+          "id": "employees",
+          "type": "dropdown",
+          "fieldLabel": "Employee count",
+          "fieldHelp": "Used for compliance scope determination (NIS2 size threshold, NY DFS Class A determination, Texas safe harbor scope).",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "operating_regions",
+              "operator": "includes",
+              "values": ["eu"]
+            },
+            {
+              "conditionRelation": "or",
+              "field": "us_states",
+              "operator": "includes",
+              "values": ["tx"]
+            },
+            {
+              "conditionRelation": "or",
+              "conditions": [
+                {
+                  "field": "us_states",
+                  "operator": "includes",
+                  "values": ["ny"]
+                },
+                {
+                  "conditionRelation": "and",
+                  "field": "industry",
+                  "operator": "includes",
+                  "values": ["financial_services", "insurance"]
+                }
+              ]
+            }
+          ],
+          "placeholder": "Select a range",
+          "options": [
+            { "value": "1_50", "label": "1 to 50" },
+            { "value": "51_250", "label": "51 to 250" },
+            { "value": "251_1000", "label": "251 to 1,000" },
+            { "value": "over_1000", "label": "Over 1,000" }
+          ]
+        },
+        {
+          "id": "public_status",
+          "type": "radio",
+          "fieldLabel": "Public company status",
+          "fieldHelp": null,
+          "conditional": false,
+          "options": [
+            { "value": "private", "label": "Private" },
+            { "value": "planning_ipo", "label": "Planning IPO within 24 months" },
+            { "value": "public", "label": "Publicly traded (US exchange)" }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionNum": 3,
+      "sectionTitle": "Data handled",
+      "fields": [
+        {
+          "id": "data_types",
+          "type": "checkbox",
+          "fieldLabel": "Sensitive data types stored, processed, or transmitted",
+          "fieldHelp": null,
+          "conditional": false,
+          "showAllToggle": true,
+          "showAllToggleLabel": "Don't see what you handle? Show all data types",
+          "options": [
+            { "value": "phi", "label": "Protected Health Information (PHI / ePHI)" },
+            { "value": "pci", "label": "Payment card data (cardholder or authentication data)" },
+            { "value": "pii", "label": "Personally Identifiable Information (general PII)" },
+            {
+              "value": "cui",
+              "label": "Controlled Unclassified Information (CUI)",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            {
+              "value": "fci",
+              "label": "Federal Contract Information (FCI)",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            { "value": "financial", "label": "Financial records (account, transaction, lending data)" },
+            {
+              "value": "student",
+              "label": "Student educational records",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            { "value": "children", "label": "Personal data of children under 13" },
+            { "value": "biometric", "label": "Biometric data" },
+            {
+              "value": "cji",
+              "label": "Criminal Justice Information (CJI)",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            {
+              "value": "fti",
+              "label": "Federal Tax Information (FTI)",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            { "value": "none", "label": "None of the above" }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionNum": 4,
+      "sectionTitle": "Customers and contracts",
+      "fields": [
+        {
+          "id": "customer_types",
+          "type": "checkbox",
+          "fieldLabel": "Customer types",
+          "fieldHelp": null,
+          "conditional": false,
+          "options": [
+            { "value": "consumers", "label": "Individual people (consumers)" },
+            { "value": "businesses", "label": "Other businesses (B2B)" },
+            { "value": "healthcare_orgs", "label": "Healthcare providers or health plans (clinics, hospitals, insurers)" },
+            { "value": "financial_orgs", "label": "Financial institutions (banks, lenders, insurers, advisors)" },
+            {
+              "value": "federal_civilian",
+              "label": "US federal civilian agencies (HHS, GSA, etc.)",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            {
+              "value": "dod",
+              "label": "US Department of Defense",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            { "value": "state_local", "label": "State, local, or tribal governments" },
+            { "value": "education", "label": "Schools, colleges, or universities" },
+            { "value": "nonprofit", "label": "Nonprofits" }
+          ]
+        },
+        {
+          "id": "contracts",
+          "type": "checkbox",
+          "fieldLabel": "Contractual or customer-imposed requirements",
+          "fieldHelp": "Showing because the customer types or industry suggest these may be relevant.",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "customer_types",
+              "operator": "includes",
+              "values": ["businesses", "federal_civilian", "dod", "state_local", "education", "healthcare_orgs", "financial_orgs"]
+            },
+            {
+              "conditionRelation": "or",
+              "field": "industry",
+              "operator": "includes",
+              "values": ["defense", "technology", "professional_services"]
+            }
+          ],
+          "options": [
+            {
+              "value": "dfars",
+              "label": "DFARS 252.204-7012 / 7019 / 7020 clauses",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            {
+              "value": "far_171",
+              "label": "FAR contracts requiring NIST SP 800-171",
+              "conditions": [
+                {
+                  "field": "operating_regions",
+                  "operator": "includes",
+                  "values": ["us"]
+                }
+              ]
+            },
+            { "value": "soc2", "label": "Customer-mandated SOC 2 reports" },
+            { "value": "iso27001", "label": "Customer-mandated ISO 27001 certification" },
+            { "value": "cyber_insurance", "label": "Cyber insurance attestations or controls" },
+            { "value": "card_brand", "label": "Card brand merchant or service provider agreement" }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionNum": 5,
+      "sectionTitle": "Operations",
+      "fields": [
+        {
+          "id": "card_handling",
+          "type": "dropdown",
+          "fieldLabel": "Payment card handling",
+          "fieldHelp": "Showing because your industry or selected data types suggest payment cards may be relevant.",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "data_types",
+              "operator": "includes",
+              "values": ["pci"]
+            },
+            {
+              "conditionRelation": "or",
+              "field": "industry",
+              "operator": "includes",
+              "values": ["retail", "hospitality", "healthcare", "financial_services", "education", "nonprofit", "professional_services", "insurance", "legal"]
+            }
+          ],
+          "placeholder": "Select an option",
+          "options": [
+            { "value": "none", "label": "Does not accept payment cards" },
+            { "value": "redirected", "label": "Accepts cards only via fully outsourced redirect (e.g., Stripe Checkout)" },
+            { "value": "processed", "label": "Processes or stores cardholder data directly" },
+            { "value": "service_provider", "label": "Service provider to merchants (e.g., gateway, processor, hosting)" }
+          ]
+        },
+        {
+          "id": "critical_infra",
+          "type": "radio",
+          "fieldLabel": "Critical infrastructure sector",
+          "fieldHelp": "Showing because the energy industry has sector-specific cybersecurity standards.",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "industry",
+              "operator": "includes",
+              "values": ["energy"]
+            }
+          ],
+          "options": [
+            { "value": "none", "label": "Not a critical infrastructure operator" },
+            { "value": "energy", "label": "Energy / utilities (bulk electric system)" },
+            { "value": "other_ci", "label": "Other critical infrastructure sector" }
+          ]
+        },
+        {
+          "id": "provider_role",
+          "type": "checkbox",
+          "fieldLabel": "Service provider role",
+          "fieldHelp": "Showing because your customers or industry suggest you may serve other organizations.",
+          "conditional": true,
+          "conditions": [
+            {
+              "field": "industry",
+              "operator": "includes",
+              "values": ["technology"]
+            },
+            {
+              "conditionRelation": "or",
+              "field": "customer_types",
+              "operator": "includes",
+              "values": ["businesses", "federal_civilian", "dod", "state_local", "education", "healthcare_orgs", "financial_orgs"]
+            }
+          ],
+          "options": [
+            { "value": "msp", "label": "MSP or MSSP serving other organizations" },
+            { "value": "saas", "label": "SaaS provider" },
+            { "value": "cloud", "label": "Cloud infrastructure provider (IaaS / PaaS)" },
+            { "value": "none", "label": "Not a service provider in any of these ways" }
+          ]
+        }
+      ]
+    }
+  ]
+}

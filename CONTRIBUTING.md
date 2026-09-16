@@ -38,7 +38,7 @@ This project is maintained by [Blacksmith InfoSec](https://blacksmithinfosec.com
 ```bash
 # Clone your fork
 git clone https://github.com/YOUR_USERNAME/compliance-profile-generator.git
-cd risk-assessments
+cd compliance-profile-generator
 
 # Install dependencies
 npm install
@@ -93,12 +93,6 @@ We welcome various types of contributions:
 * Extract reusable logic into custom hooks
 * Use proper TypeScript types for props
 * Follow accessibility best practices (ARIA labels, semantic HTML)
-
-### File Organization
-
-```
-app.js
-```
 
 ### Naming Conventions
 

@@ -1,0 +1,142 @@
+{
+  "profileIdentifiers": [
+    {
+      "id": "company_name",
+      "type": "text",
+      "label": "Client name",
+      "placeholder": "Client or organization name",
+      "optional": true,
+      "maxLength": 100
+    }
+  ],
+  "sections": [
+    {
+      "sectionNum": 1,
+      "sectionTitle": "Checkbox tests",
+      "fields": [
+        {
+          "id": "checkbox_flat",
+          "type": "checkbox",
+          "fieldLabel": "Checkbox with flat options",
+          "fieldHelp": "Tests FieldOptionProps[] for checkbox.",
+          "conditional": false,
+          "options": [
+            { "value": "cb_flat_1", "label": "Flat option 1" },
+            { "value": "cb_flat_2", "label": "Flat option 2" },
+            { "value": "cb_flat_3", "label": "Flat option 3" }
+          ]
+        },
+        {
+          "id": "checkbox_grouped",
+          "type": "checkbox",
+          "fieldLabel": "Checkbox with grouped options",
+          "fieldHelp": "Tests FieldGroupOptionProps[] for checkbox.",
+          "conditional": false,
+          "optionGroups": [
+            {
+              "group": "Group A",
+              "options": [
+                { "value": "cb_grp_a1", "label": "Group A option 1" },
+                { "value": "cb_grp_a2", "label": "Group A option 2" }
+              ]
+            },
+            {
+              "group": "Group B",
+              "options": [
+                { "value": "cb_grp_b1", "label": "Group B option 1" },
+                { "value": "cb_grp_b2", "label": "Group B option 2" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionNum": 2,
+      "sectionTitle": "Radio tests",
+      "fields": [
+        {
+          "id": "radio_flat",
+          "type": "radio",
+          "fieldLabel": "Radio with flat options",
+          "fieldHelp": "Tests FieldOptionProps[] for radio.",
+          "conditional": false,
+          "options": [
+            { "value": "r_flat_1", "label": "Flat radio 1" },
+            { "value": "r_flat_2", "label": "Flat radio 2" },
+            { "value": "r_flat_3", "label": "Flat radio 3" }
+          ]
+        },
+        {
+          "id": "radio_grouped",
+          "type": "radio",
+          "fieldLabel": "Radio with grouped options",
+          "fieldHelp": "Tests FieldGroupOptionProps[] for radio.",
+          "conditional": true,
+          "conditionalOn": { "field": "radio_flat", "value": "r_flat_2" },
+          "optionGroups": [
+            {
+              "group": "Yes/No",
+              "options": [
+                { "value": "r_grp_yes", "label": "Yes" },
+                { "value": "r_grp_no", "label": "No" }
+              ]
+            },
+            {
+              "group": "Other",
+              "options": [
+                { "value": "r_grp_maybe", "label": "Maybe" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "sectionNum": 3,
+      "sectionTitle": "Dropdown tests",
+      "fields": [
+        {
+          "id": "dropdown_flat",
+          "type": "dropdown",
+          "fieldLabel": "Dropdown with flat options",
+          "fieldHelp": "Tests FieldOptionProps[] for dropdown.",
+          "conditional": false,
+          "placeholder": "Choose one",
+          "options": [
+            { "value": "d_flat_1", "label": "Flat dropdown 1" },
+            { "value": "d_flat_2", "label": "Flat dropdown 2" },
+            { "value": "d_flat_3", "label": "Flat dropdown 3" }
+          ]
+        },
+        {
+          "id": "dropdown_grouped",
+          "type": "dropdown",
+          "fieldLabel": "Dropdown with grouped options",
+          "fieldHelp": null,
+          "conditional": false,
+          "placeholder": "Choose by group",
+          "optionGroups": [
+            {
+              "group": "Tier 1",
+              "options": [
+                { "value": "d_grp_t1_1", "label": "Tier 1 option 1" },
+                { "value": "d_grp_t1_2", "label": "Tier 1 option 2" }
+              ]
+            },
+            {
+              "group": "Tier 2",
+              "options": [
+                { "value": "d_grp_t2_1", "label": "Tier 2 option 1" },
+                { "value": "d_grp_t2_2", "label": "Tier 2 option 2" }
+              ]
+            }
+          ],
+          "ungroupedOptions": [
+            { "value": "d_other", "label": "Other" }
+          ]
+        }
+      ]
+    }
+  ]
+}
