@@ -280,7 +280,7 @@ Since this is a security assessment tool, please:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under an Apache 2 License.
 
 ## Thank You!
 

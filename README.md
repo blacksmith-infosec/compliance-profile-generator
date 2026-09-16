@@ -4,7 +4,7 @@ Generate a ranked list of likely applicable compliance frameworks and regulation
 
 Built for MSPs, vCISOs, and auditors who need a defensible starting point for prospect conversations and client onboarding in minutes, not days.
 
-Open source under an MIT license. Built and maintained by [Blacksmith InfoSec](https://blacksmithinfosec.com).
+Open source under an Apache 2 license. Built and maintained by [Blacksmith InfoSec](https://blacksmithinfosec.com).
 
 ## What it does
 
