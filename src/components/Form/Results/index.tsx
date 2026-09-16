@@ -50,7 +50,7 @@ const Results: React.FC = () => {
     return (
       <section className='results-placeholder'>
         <h2>Results</h2>
-        <p>Complete the form to generate recommended compliance frameworks.</p>
+        <p>No applicable compliance frameworks were identified for the provided responses.</p>
       </section>
     );
   }
