@@ -82,7 +82,7 @@ const allDisplay = allOptions.map((item) => ({
         } else if (focusedIndex >= 0) {
           if (!(allDisplay[focusedIndex].group)) {
             handleSelect({
-              ...allDisplay[focusedIndex], 
+              ...allDisplay[focusedIndex],
               group: allDisplay[focusedIndex].groupName ? allDisplay[focusedIndex].groupName : ''});
           }
         }
@@ -132,37 +132,11 @@ const allDisplay = allOptions.map((item) => ({
     buttonRef.current?.focus();
   };
 
-  // const handleToggle = () => {
-  //   if (!disabled) {
-  //     if (!isOpen) {
-  //       setFocusedIndex(0);
-  //     }
-  //   }
-  // };
-
   return (
     <div
       className={`custom-radio${className ? ' ' + className : ''}${value ? ' answered' : ''}`}
       ref={radioRef}
     >
-      
-      {/* <button
-        ref={buttonRef}
-        id={id}
-        type='button'
-        className={`custom-radio-button ${isOpen ? 'open' : ''}`}
-        // onClick={handleToggle}
-        onKeyDown={handleKeyDown}
-        // aria-haspopup='listbox'
-        // aria-expanded={isOpen}
-        aria-labelledby={id ? `${id}-label` : undefined}
-        disabled={disabled}
-      >
-        <span className='custom-radio-button-text'>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <span className={`custom-radio-arrow ${isOpen ? 'open' : ''}`}>▼</span>
-      </button> */}
 
       {isOpen && (
         <ul
@@ -187,7 +161,6 @@ const allDisplay = allOptions.map((item) => ({
               onClick={() => handleSelect({
                 ...option, group: option.groupName ? option.groupName : ''
               })}
-              onMouseEnter={() => setFocusedIndex(index)}
             >
               {option.label}
             </li>

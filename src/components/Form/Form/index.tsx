@@ -31,12 +31,12 @@ export const Form: React.FC<FormProps> = () => {
     //Reset Focus
     formRef?.current?.parentElement?.scrollIntoView({
       behavior: 'smooth',
-      block: 'start', 
+      block: 'start',
     });
   };
 
   return (
-    <form id="profile-form" className="form-pannel" ref={formRef}>
+    <form id='profile-form' className='form-pannel' ref={formRef}>
       <ProfileIdentifier
         clientName={clientName}
         preperName={preperName}
@@ -58,10 +58,10 @@ export const Form: React.FC<FormProps> = () => {
           collapsed={!(index === indexOfExpandedSection)} // First section should be displayed
         />
       ))}
-      <div className = "form-footer">
-        <button 
-          type="submit"
-          className="btn btn-primary" 
+      <div className = 'form-footer'>
+        <button
+          type='submit'
+          className='btn btn-primary'
           disabled={!allSectionsComplete}
           onClick={(e) => {
             e.preventDefault();
@@ -70,9 +70,9 @@ export const Form: React.FC<FormProps> = () => {
         >
           Generate Profile
         </button>
-        <button 
-          type="reset" 
-          className="btn btn-ghost" 
+        <button
+          type='reset'
+          className='btn btn-ghost'
           onClick={handleReset}
         >
           Reset

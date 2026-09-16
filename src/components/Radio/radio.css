@@ -107,8 +107,7 @@
 
 .custom-radio-option:hover,
 .custom-radio-option.focused {
-  background: var(--surface-2);
-  color: var(--accent-text);
+  background: var(--accent);
 }
 
 .custom-radio-option.selected {
@@ -132,7 +131,7 @@
 }
 
 .custom-radio-list::-webkit-scrollbar-track {
-  background: var(--surface-2);
+  background: var(--accent);
   border-radius: 4px;
 }
 

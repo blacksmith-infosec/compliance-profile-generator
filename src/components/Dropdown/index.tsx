@@ -75,7 +75,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
-          setFocusedIndex(0);
         } else if (focusedIndex >= 0) {
           if (!(allDisplay[focusedIndex].group)) {
             handleSelect({
@@ -95,7 +94,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
-          setFocusedIndex(0);
         } else {
           setFocusedIndex((prev) => (prev < allOptions.length - 1 ? prev + 1 : prev));
         }
@@ -108,9 +106,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
         break;
       case 'Home':
         e.preventDefault();
-        if (isOpen) {
-          setFocusedIndex(0);
-        }
         break;
       case 'End':
         e.preventDefault();
@@ -145,9 +140,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const handleToggle = () => {
     if (!disabled) {
       setIsOpen(!isOpen);
-      if (!isOpen) {
-        setFocusedIndex(0);
-      }
     }
   };
 
@@ -193,7 +185,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
               onClick={() => handleSelect({
                 ...option, group: option.groupName ? option.groupName : ''
               })}
-              onMouseEnter={() => setFocusedIndex(index)}
             >
               {option.label}
             </li>

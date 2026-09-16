@@ -55,48 +55,48 @@ export const ProfileIdentifier: React.FC<ProfileIdentifierProps> = ({
 
   return disabled ? '' : (
     <div className='profile-identifier' >
-      <div className="profile-identifier-field">
-        <label 
-          className="profile-identifier-label" 
-          htmlFor="company_name">
-            Client name 
-            <span className="optional">(optional)</span>
+      <div className='profile-identifier-field'>
+        <label
+          className='profile-identifier-label'
+          htmlFor='company_name'>
+            Client name{' '}
+            <span className='optional'>(optional)</span>
         </label>
         <input
-          type="text"
-          id="company_name"
-          name="company_name"
-          className="profile-identifier-input"
-          placeholder="Client or organization name"
+          type='text'
+          id='company_name'
+          name='company_name'
+          className='profile-identifier-input'
+          placeholder='Client or organization name'
           onChange={(e) => { handleClientNameChange(e.target.value); }}>
         </input>
       </div>
-      <div className="profile-identifier-field">
-        <label 
-          className="profile-identifier-label"
-          htmlFor="msp_name">
-            Prepared By <span className="optional">(optional)</span>
+      <div className='profile-identifier-field'>
+        <label
+          className='profile-identifier-label'
+          htmlFor='msp_name'>
+            Prepared By <span className='optional'>(optional)</span>
         </label>
         <input
-          type="text"
-          id="msp_name"
-          name="msp_name"
-          className="profile-identifier-input"
-          placeholder="Your firm or MSP name"
+          type='text'
+          id='msp_name'
+          name='msp_name'
+          className='profile-identifier-input'
+          placeholder='Your firm or MSP name'
           onChange={(e) => { handlePreperNameChange(e.target.value); }}>
         </input>
       </div>
-      <div className="profile-identifier-field profile-identifier-logo">
-        <label className="profile-identifier-label" htmlFor='logo'>
-          Logo <span className="optional">(optional)</span>
+      <div className='profile-identifier-field profile-identifier-logo'>
+        <label className='profile-identifier-label' htmlFor='logo'>
+          Logo <span className='optional'>(optional)</span>
         </label>
 
-        <div className="logo-control">
+        <div className='logo-control'>
           {/* Hidden native input */}
           <input
-            name="logo"
-            type="file"
-            accept="image/*"
+            name='logo'
+            type='file'
+            accept='image/*'
             ref={fileInputRef}
             onChange={onFileChange}
             style={{ display: 'none' }}
@@ -105,8 +105,8 @@ export const ProfileIdentifier: React.FC<ProfileIdentifierProps> = ({
           {/* Upload Button: Hidden if an image exists */}
           {!logoImg && (
             <button
-              type="button"
-              className="btn btn-ghost btn-small logo-upload-btn"
+              type='button'
+              className='btn btn-ghost btn-small logo-upload-btn'
               onClick={triggerFileInput}
             >
               Upload
@@ -115,17 +115,17 @@ export const ProfileIdentifier: React.FC<ProfileIdentifierProps> = ({
 
           {/* Preview Container: Only shown if an image exists */}
           {logoImg && previewUrl && (
-            <div className="logo-preview">
+            <div className='logo-preview'>
               <img
                 src={previewUrl}
-                alt="Logo preview"
+                alt='Logo preview'
                 style={{ width: '50px', height: '50px', objectFit: 'cover' }} // Adjust to your styles
               />
               <button
-                type="button"
-                className="logo-remove"
+                type='button'
+                className='logo-remove'
                 onClick={removeLogoImg}
-                aria-label="Remove logo"
+                aria-label='Remove logo'
               >
                 ×
               </button>

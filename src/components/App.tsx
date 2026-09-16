@@ -11,18 +11,17 @@ import './styles.css';
 
 const App = () => {
   return (
-      <section className='app-panel panel'>
-      <ThemeProvider>
-        <Header />
+    <ThemeProvider>
+      <Header />
+      <main className='container main'>
         <Intro />
         <ComplianceProfileProvider>
           <Form />
           <Results />
         </ComplianceProfileProvider>
         <Footer />
-      </ThemeProvider>
-      </section>
-    // </Router>
+      </main>
+    </ThemeProvider>
   );
 };
 

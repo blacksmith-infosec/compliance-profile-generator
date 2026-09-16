@@ -103,8 +103,7 @@
 
 .custom-dropdown-option:hover:not(.group),
 .custom-dropdown-option.focused:not(.group) {
-  background: var(--surface-2);
-  color: var(--accent-text);
+  background: var(--accent);
 }
 
 .custom-dropdown-option.selected {
@@ -128,7 +127,7 @@
 }
 
 .custom-dropdown-list::-webkit-scrollbar-track {
-  background: var(--surface-2);
+  background: var(--accent);
   border-radius: 4px;
 }
 

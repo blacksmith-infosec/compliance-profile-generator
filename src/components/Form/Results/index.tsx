@@ -1,6 +1,7 @@
 import React from 'react';
-import { EvaluatedFramework, useComplianceProfile } from '../../../providers/ComplianceProfileProvider';
-import { useTheme } from '../../../providers/ThemeProvider';
+import { EvaluatedFramework } from '../../../types/profileResults';
+import { useComplianceProfile } from '../../../providers/ComplianceProfileProvider';
+import { downloadProfilePDF } from '../../../modules/pdf';
 
 const FrameworkList: React.FC<{ title: string; items: EvaluatedFramework[] }> = ({ title, items }) => {
   if (items.length === 0) {
@@ -8,7 +9,7 @@ const FrameworkList: React.FC<{ title: string; items: EvaluatedFramework[] }> = 
   }
 
   return (
-    <section className="results-group">
+    <section className='results-group'>
       <h3>{title}</h3>
         {items.map((framework) => (
           <div className={'framework-card '+title.toLowerCase()} key={framework.id}>
@@ -24,28 +25,17 @@ const FrameworkList: React.FC<{ title: string; items: EvaluatedFramework[] }> = 
 
 const Results: React.FC = () => {
   const { profile, hasGeneratedProfile, allSectionsComplete } = useComplianceProfile();
-  const { theme } = useTheme();
 
   if (!hasGeneratedProfile) {
     return (
-      <section className="results-placeholder">
-        {theme === 'light' ?
-            <img className="placeholder-mark placeholder-mark-light" 
-                 src="assets/Dark_Blue.svg" 
-                 alt="Blacksmith logo" /> 
-            : 
-            <img className="placeholder-mark placeholder-mark-dark" 
-                 src="assets/Bright_Blue.svg" 
-                 alt="Blacksmith logo" />
+      <section className='results-placeholder'>
+        <img className='placeholder-mark placeholder-mark-dark' src='assets/Bright_Blue.svg' alt='Blacksmith logo' />
+        <p className='placeholder-text'>
+          {allSectionsComplete
+            ? 'Click Generate Profile to view applicable frameworks.'
+            : 'Complete the form to generate a list of likely applicable frameworks and regulations.'
           }
-        {/* <h2>Results</h2> */}
-        {allSectionsComplete
-        ? <p className="placeholder-text">
-            Click Generate Profile to view applicable frameworks.
-          </p>
-        : <p className="placeholder-text">
-            Complete the form to generate a list of likely applicable frameworks and regulations.
-          </p>}
+        </p>
       </section>
     );
   }
@@ -54,7 +44,7 @@ const Results: React.FC = () => {
 
   if (totalMatches === 0) {
     return (
-      <section className="results-placeholder">
+      <section className='results-placeholder'>
         <h2>Results</h2>
         <p>Complete the form to generate recommended compliance frameworks.</p>
       </section>
@@ -62,11 +52,17 @@ const Results: React.FC = () => {
   }
 
   return (
-    <section className="results-panel">
-      <h2 className="results-title">Results</h2>
-      <FrameworkList title="Definite" items={profile.definite} />
-      <FrameworkList title="Likely" items={profile.likely} />
-      <FrameworkList title="Consider" items={profile.consider} />
+    <section className='results-panel'>
+      <h2 className='results-title'>Results</h2>
+      <FrameworkList title='Definite' items={profile.definite} />
+      <FrameworkList title='Likely' items={profile.likely} />
+      <FrameworkList title='Consider' items={profile.consider} />
+      <button
+        className='btn btn-primary'
+        onClick={() => downloadProfilePDF(profile)}
+      >
+        Download PDF
+      </button>
     </section>
   );
 };

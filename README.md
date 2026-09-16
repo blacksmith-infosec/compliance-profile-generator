@@ -4,7 +4,7 @@ Generate a ranked list of likely applicable compliance frameworks and regulation
 
 Built for MSPs, vCISOs, and auditors who need a defensible starting point for prospect conversations and client onboarding in minutes, not days.
 
-Open source under MIT. Built and maintained by [Blacksmith InfoSec](https://blacksmithinfosec.com).
+Open source under an MIT license. Built and maintained by [Blacksmith InfoSec](https://blacksmithinfosec.com).
 
 ## What it does
 
@@ -53,19 +53,6 @@ The tool is a static site and can be hosted anywhere that serves static files. R
 - **Netlify, Vercel, Render**: connect repo, no build step required
 
 Blacksmith InfoSec hosts a working copy at https://profile.blacksmithinfosec.com (planned).
-
-## Project structure
-
-```
-compliance-profile-generator/
-├── index.html              Form, layout, results placeholder
-├── styles.css              Design system, dark theme, print styles
-├── app.js                  Form handling, evaluation engine, rendering
-├── data/
-│   └── frameworks.js       Framework definitions + applicability rules
-├── LICENSE                 MIT
-└── README.md               This file
-```
 
 ## How the rules work
 

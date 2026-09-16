@@ -37,13 +37,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({
     ? options.map((group) => ({ groupName: group.group, firstOpt: group.options[0] }))
     : [];
 
-  const allDisplay = allOptions.map((item) => ({ 
-    value: item.value, 
-    label: item.label, 
-    group: false, 
-    groupName: item.groupName 
+  const allDisplay = allOptions.map((item) => ({
+    value: item.value,
+    label: item.label,
+    group: false,
+    groupName: item.groupName
   }));
-  
+
   groupFirstOptions.forEach((itemWithGroup) =>
     allDisplay.splice(
       allDisplay.findIndex((item) => itemWithGroup.firstOpt?.value === item.value),
@@ -142,7 +142,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       className={`custom-checkbox ${className}${values.length > 0 ? ' answered' : ''}`}
       ref={checkboxRef}
     >
-      
+
       {isOpen && (
         <ul
           ref={listRef}
@@ -167,8 +167,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
                 value: option.value,
                 label: option.label,
                 group: option.groupName ? option.groupName : ''})}
-              onMouseEnter={() => setFocusedIndex(index)}
-            > 
+            >
               {option.label}
             </li>
           ))}

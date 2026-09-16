@@ -5,72 +5,24 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
+
+import {
+  ComplianceProfile,
+  Framework,
+  Evaluator,
+  EvaluatedFramework,
+  SchemaField,
+  SchemaSection,
+} from '../../types/profileResults';
 import formData from '../../../data/form-schema.json';
 import frameworksData from '../../../data/frameworks.json';
 import {
   FormAnswer,
   FormAnswers,
   FormSectionProps,
-  FieldGroupOptionProps,
-  FieldOptionProps,
   FieldOptions,
-  Conditions,
 } from '../../components/Form/form.d.tsx';
 import { areAllFormSectionsComplete } from '../../components/Form/completion';
-
-type SchemaFieldBase = {
-  id: string;
-  type: string;
-  fieldLabel: string;
-  fieldHelp?: string | null;
-  conditional: boolean;
-  conditions?: Conditions;
-};
-
-type SchemaField = SchemaFieldBase & {
-  options?: FieldOptionProps[];
-  optionGroups?: FieldGroupOptionProps[];
-  ungroupedOptions?: FieldOptionProps[];
-};
-
-type SchemaSection = Omit<FormSectionProps, 'fields' | 'answers' | 'onAnswerChange' | 'setIndexOfExpandedSection'> & {
-  fields: SchemaField[];
-};
-
-export interface Evaluator {
-  level: 'definite' | 'likely' | 'consider';
-  reason: string;
-  conditions: Record<string, string>;
-}
-
-export interface Framework {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  reference_url: string;
-  is_baseline?: boolean;
-  suppressed_by_baseline?: boolean;
-  evaluators: Evaluator[];
-  first_steps: string[];
-}
-
-export interface EvaluatedFramework extends Framework {
-  matchLevel: Evaluator['level'];
-  matchReason: string;
-}
-
-export interface ComplianceProfile {
-  date?: Date;
-  definite: EvaluatedFramework[];
-  likely: EvaluatedFramework[];
-  consider: EvaluatedFramework[];
-  identity: {
-    clientName: string;
-    preperName: string;
-    logoImg: File | null;
-  };
-}
 
 interface ComplianceProfileContextType {
   sections: FormSectionProps[];
@@ -148,8 +100,14 @@ const evaluateFramework = (framework: Framework, answers: FormAnswers): Evaluate
 
   framework.evaluators.forEach((evaluator) => {
     const isMatch = Object.entries(evaluator.conditions).every(([field, value]) => {
-      const answer = answers[field];
-      return Array.isArray(answer) && answer.some((item) => item.value === value);
+      if (field.endsWith('_includes')) {
+        const actualField = field.replace('_includes', '');
+        const answer = answers[actualField];
+        return Array.isArray(answer) && answer.some((item) => item.value === value);
+      } else {
+        const answer = answers[field];
+        return Array.isArray(answer) && answer.some((item) => item.value === value);
+      }
     });
 
     if (!isMatch) {
