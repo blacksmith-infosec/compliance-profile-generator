@@ -29,7 +29,11 @@ export const Header = () => {
     <header className='site-header'>
       <div className='container header-inner'>
         <div className='brand' aria-label='Blacksmith Compliance Profile Generator'>
-          <img className='brand-mark' src='assets/Bright_Blue.svg' alt='Blacksmith logo' />
+          <img
+            className='brand-mark'
+            src='https://assets.blacksmithinfosec.com/images/logos/icon/Bright_Blue.png'
+            alt='Blacksmith logo'
+          />
           <div className='brand-text'>
             <span className='brand-name'>
               Blacksmith

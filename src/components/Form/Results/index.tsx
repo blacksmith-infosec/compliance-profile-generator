@@ -29,7 +29,11 @@ const Results: React.FC = () => {
   if (!hasGeneratedProfile) {
     return (
       <section className='results-placeholder'>
-        <img className='placeholder-mark placeholder-mark-dark' src='assets/Bright_Blue.svg' alt='Blacksmith logo' />
+        <img
+          className='brand-mark'
+          src='https://assets.blacksmithinfosec.com/images/logos/icon/Bright_Blue.png'
+          alt='Blacksmith logo'
+        />
         <p className='placeholder-text'>
           {allSectionsComplete
             ? 'Click Generate Profile to view applicable frameworks.'
