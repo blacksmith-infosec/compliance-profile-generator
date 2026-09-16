@@ -33,8 +33,8 @@ cd compliance-profile-generator
 If you prefer a local web server (recommended if you want to test refresh and caching behavior):
 
 ```
-# Python 3
-python -m http.server 8000
+# NPM
+npm run dev
 
 # Or Node.js (no install required)
 npx serve
