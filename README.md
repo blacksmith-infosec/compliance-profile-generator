@@ -20,29 +20,14 @@ The 42 frameworks currently covered include HIPAA, PCI DSS, NIST 800-171, CMMC, 
 
 ## Run locally
 
-This is a static site with no build step and no dependencies.
+1. Install dependencies:
 
-The simplest way: download or clone the repo, then open `index.html` in any modern browser. Because data is loaded as a JavaScript file (not via `fetch`), it works directly from the file system.
+   ```bash
+   npm install
+   npm run start
+   ```
 
-```
-git clone https://github.com/blacksmith-infosec/compliance-profile-generator.git
-cd compliance-profile-generator
-# Then open index.html in your browser
-```
-
-If you prefer a local web server (recommended if you want to test refresh and caching behavior):
-
-```
-# NPM
-npm run dev
-
-# Or Node.js (no install required)
-npx serve
-
-# Or use the VS Code Live Server extension
-```
-
-Then visit `http://localhost:8000`.
+Then visit `http://localhost:8081`.
 
 ## Deploy
 
@@ -52,7 +37,7 @@ The tool is a static site and can be hosted anywhere that serves static files. R
 - **Cloudflare Pages**: connect the GitHub repo, no build command needed, output directory is the root
 - **Netlify, Vercel, Render**: connect repo, no build step required
 
-Blacksmith InfoSec hosts a working copy at https://profile.blacksmithinfosec.com (planned).
+Blacksmith InfoSec hosts a working copy at https://profile.blacksmithinfosec.com.
 
 ## How the rules work
 
