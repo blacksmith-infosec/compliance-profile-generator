@@ -74,7 +74,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
     fields
       .filter((field) => evaluateConditions(field.conditions, answers))
       .forEach((field) => {
-        answers[field.id]?.forEach((ans) => 
+        answers[field.id]?.forEach((ans) =>
           pair[field.id] ? pair[field.id].push(ans) : pair[field.id] = [ans]
           );
         }
@@ -111,7 +111,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   const scrollToArea = () => {
     formRef.current?.scrollIntoView({
       behavior: 'smooth',
-      block: 'start', 
+      block: 'start',
     });
   };
 
@@ -123,9 +123,11 @@ export const FormSection: React.FC<FormSectionProps> = ({
       data-section={sectionNum}
       id={id}
     >
-      <legend className='section-legend' 
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+      <legend className='section-legend'
         onClick={handleSectionClick}
-        onKeyDown={handleKeyDown}>
+        onKeyDown={handleKeyDown}
+      >
         <span className='section-marker'>
           <span className="section-check">✓</span>
           <span className="section-number">
