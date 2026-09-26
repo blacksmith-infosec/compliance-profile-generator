@@ -444,7 +444,8 @@
             { "value": "soc2", "label": "Customer-mandated SOC 2 reports" },
             { "value": "iso27001", "label": "Customer-mandated ISO 27001 certification" },
             { "value": "cyber_insurance", "label": "Cyber insurance attestations or controls" },
-            { "value": "card_brand", "label": "Card brand merchant or service provider agreement" }
+            { "value": "card_brand", "label": "Card brand merchant or service provider agreement" },
+            { "value": "none", "label": "None of these requirements" }
           ]
         }
       ]

@@ -10,6 +10,7 @@ const MARGIN_TOP = 56;
 const MARGIN_BOTTOM = 56;
 const CONTENT_W = PAGE_W - (MARGIN_X * 2);
 const CONTENT_BOTTOM = PAGE_H - MARGIN_BOTTOM;
+const LOGO_MAX_SIZE = 96;
 
 // ---- Brand colors (RGB 0-255) --------------------------------------
 const C_TITLE: [number, number, number] = [6, 35, 63];        // Maastricht Blue
@@ -30,8 +31,46 @@ const TIER_LABEL = {
   consider: 'Recommended'
 };
 
+type PdfLogo = { dataUrl: string; aspectRatio: number };
+
+// Rasterize browser-supported uploads (including SVG) for jsPDF.
+const prepareLogo = (file: File): Promise<PdfLogo> => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onerror = () => reject(new Error('Could not read the uploaded logo.'));
+  reader.onload = () => {
+    if (typeof reader.result !== 'string') {
+      reject(new Error('Could not read the uploaded logo.'));
+      return;
+    }
+
+    const image = new Image();
+    image.onerror = () => reject(new Error('Could not decode the uploaded logo.'));
+    image.onload = () => {
+      try {
+        const { naturalWidth, naturalHeight } = image;
+        if (!naturalWidth || !naturalHeight) throw new Error('The uploaded logo has no dimensions.');
+
+        // A 512px image is plenty for the header logo and keeps PDFs small.
+        const scale = Math.min(1, 512 / Math.max(naturalWidth, naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Could not render the uploaded logo.');
+
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve({ dataUrl: canvas.toDataURL('image/png'), aspectRatio: naturalWidth / naturalHeight });
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
 // ---- Entry point ---------------------------------------------------
-export const downloadProfilePDF = (lastProfileResults: ComplianceProfile) => {
+export const downloadProfilePDF = async (lastProfileResults: ComplianceProfile) => {
   if (!jsPDF) {
     alert('PDF library failed to load. Please refresh and try again.');
     return;
@@ -41,11 +80,21 @@ export const downloadProfilePDF = (lastProfileResults: ComplianceProfile) => {
     alert('Generate a profile first, then download the PDF.');
     return;
   }
+  let logo: PdfLogo | null = null;
+  if (data.identity.logoImg) {
+    try {
+      logo = await prepareLogo(data.identity.logoImg);
+    } catch {
+      alert('Could not process the uploaded logo. Please choose a different image and try again.');
+      return;
+    }
+  }
   try {
     generatePDF(
       [...data.definite, ...data.likely, ...data.consider],
       data.identity.clientName,
-      data.identity.preperName
+      data.identity.preperName,
+      logo
     );
   } catch {
     // console.error('PDF generation failed:', err);
@@ -55,7 +104,7 @@ export const downloadProfilePDF = (lastProfileResults: ComplianceProfile) => {
 };
 
 // ---- Main generator ------------------------------------------------
-const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName: string) => {
+const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName: string, logo: PdfLogo | null) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
   // Group by tier
@@ -70,7 +119,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
 
   const state = { y: MARGIN_TOP, page: 1 };
 
-  drawReportHeader(doc, state, clientName, mspName, matches.length, grouped);
+  drawReportHeader(doc, state, clientName, mspName, matches.length, grouped, logo);
 
   (['definite', 'likely', 'consider'] as const).forEach((tier) => {
     if (grouped[tier].length === 0) return;
@@ -137,40 +186,14 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
     mspName: string,
     total: number,
     grouped: Record<'definite' | 'likely' | 'consider', EvaluatedFramework[]>,
+    logo: PdfLogo | null,
   ) => {
-    // Optional MSP logo in top-right corner of first page
-    let logoData: string | null = null;
-    let logoAspect = 1;
-    try {
-      logoData = localStorage.getItem('blacksmith_msp_logo_v1');
-      const storedAspect = localStorage.getItem('blacksmith_msp_logo_aspect_v1');
-      if (storedAspect) logoAspect = parseFloat(storedAspect) || 1;
-    } catch {
-      /* localStorage unavailable */
-      // const errorMessage = err instanceof Error ? err.message : err;
-      // setting up for conversion to react / ts
-      // {error && <div className='error'>{error}</div>}
-      // setError(errorMessage);
-    }
-    if (logoData) {
-      try {
-        const maxSize = 56; // ~0.78 inch box
-        let logoW: number, logoH: number;
-        if (logoAspect >= 1) {
-          logoW = maxSize;
-          logoH = maxSize / logoAspect;
-        } else {
-          logoH = maxSize;
-          logoW = maxSize * logoAspect;
-        }
-        const logoX = PAGE_W - MARGIN_X - logoW;
-        const logoY = state.y;
-        // jsPDF auto-detects format from data URL
-        doc.addImage(logoData, logoX, logoY, logoW, logoH);
-      } catch {
-      // } catch (logoErr) {
-        // console.warn('Failed to embed logo in PDF:', logoErr);
-      }
+    // Client logo in the top-right corner of the first page.
+    if (logo) {
+      const logoW = logo.aspectRatio >= 1 ? LOGO_MAX_SIZE : LOGO_MAX_SIZE * logo.aspectRatio;
+      const logoH = logo.aspectRatio >= 1 ? LOGO_MAX_SIZE / logo.aspectRatio : LOGO_MAX_SIZE;
+      const logoX = PAGE_W - MARGIN_X - logoW;
+      doc.addImage(logo.dataUrl, 'PNG', logoX, state.y, logoW, logoH);
     }
 
     // "BLACKSMITH INFOSEC" eyebrow
@@ -189,6 +212,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
 
     // Metadata grid
     const labelWidth = 80;
+    const valueWidth = CONTENT_W - labelWidth - (logo ? LOGO_MAX_SIZE + 20 : 0);
 
     const meta = [
       ['Prepared for', clientName || 'Not specified'],
@@ -210,7 +234,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
       // Value
       setFont(doc, 'normal');
       setColor(doc, C_BODY);
-      const valueLines = doc.splitTextToSize(String(row[1]), CONTENT_W - labelWidth);
+      const valueLines = doc.splitTextToSize(String(row[1]), valueWidth);
       for (let i = 0; i < valueLines.length; i++) {
         if (i > 0) {
           ensureSpace(doc, state, lh);
