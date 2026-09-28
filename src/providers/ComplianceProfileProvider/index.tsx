@@ -22,7 +22,7 @@ import {
   FormSectionProps,
   FieldOptions,
 } from '../../components/Form/form.d.tsx';
-import { areAllFormSectionsComplete } from '../../components/Form/completion';
+import { areAllFormSectionsComplete, pruneInactiveAnswers } from '../../components/Form/completion';
 
 interface ComplianceProfileContextType {
   sections: FormSectionProps[];
@@ -190,10 +190,7 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
   const allSectionsComplete = areAllFormSectionsComplete(sections, answers);
 
   const handleAnswerChange = (fieldId: string, value: FormAnswer[]) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [fieldId]: value,
-    }));
+    setAnswers((prev) => pruneInactiveAnswers(sections, { ...prev, [fieldId]: value }));
     setHasGeneratedProfile(false);
   };
 

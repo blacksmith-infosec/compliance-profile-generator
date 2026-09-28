@@ -6,11 +6,21 @@ import {
   FormAnswers,
   FormAnswer,
 } from '../form.d.tsx';
-import { evaluateConditions, isFieldAnswered, isSectionComplete } from '../completion';
+import {
+  evaluateConditions,
+  getApplicableFields,
+  getMissingFields,
+  isFieldAnswered,
+  isSectionComplete,
+  toggleCheckboxAnswer,
+} from '../completion';
 import Dropdown from '../../Dropdown';
 import Checkbox from '../../Checkbox';
 import Radio from '../../Radio';
 
+const noOperationsInfoMessage = 'No operations information is required based on your answers. '
+  + 'You can generate a profile without filling in this section.';
+const pendingOperationsMessage = 'Complete the earlier sections to see whether any operations information is needed.';
 
 export const FormSection: React.FC<FormSectionProps> = ({
   id,
@@ -23,9 +33,16 @@ export const FormSection: React.FC<FormSectionProps> = ({
   className = '',
   setIndexOfExpandedSection,
   collapsed = false,
-  disabled = false
+  disabled = false,
+  precedingSectionsComplete = false,
 }) => {
   const formRef = useRef<HTMLFieldSetElement>(null);
+  const applicableFields = getApplicableFields(fields, answers);
+  const missingFields = getMissingFields(fields, answers);
+  const hasNoOperationsQuestions = sectionTitle === 'Operations'
+    && precedingSectionsComplete && applicableFields.length === 0;
+  const awaitingEarlierAnswers = sectionTitle === 'Operations'
+    && !precedingSectionsComplete && applicableFields.length === 0;
 
   const isFieldAnsweredInSection = (fieldId: string) => isFieldAnswered(fieldId, answers);
 
@@ -39,17 +56,13 @@ export const FormSection: React.FC<FormSectionProps> = ({
     return Array.isArray(answer) && answer.length > 0 ? answer[0].value : '';
   };
 
-  const isSectionCompleted = () => isSectionComplete(fields, answers);
+  const isSectionCompleted = () => !awaitingEarlierAnswers && isSectionComplete(fields, answers);
 
   const setSingleValue = (fieldId: string, value: FormAnswer) => onAnswerChange(fieldId, [value]);
 
   const toggleCheckboxValue = (fieldId: string, value: FormAnswer) => {
     const current = Array.isArray(answers[fieldId]) ? answers[fieldId] : [];
-    const next = current.some((item) => item.value === value.value)
-      ? current.filter((item) => item.value !== value.value)
-      : [...current, value];
-
-    onAnswerChange(fieldId, next);
+    onAnswerChange(fieldId, toggleCheckboxAnswer(current, value));
   };
 
   const isGrouped = (options: FieldOptions): options is FieldGroupOptionProps[] => {
@@ -71,17 +84,24 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
   const summarize = () => {
     const pair:FormAnswers = {};
-    fields
-      .filter((field) => evaluateConditions(field.conditions, answers))
-      .forEach((field) => {
-        answers[field.id]?.forEach((ans) =>
-          pair[field.id] ? pair[field.id].push(ans) : pair[field.id] = [ans]
-          );
-        }
+    applicableFields.forEach((field) => {
+      answers[field.id]?.forEach((ans) =>
+        pair[field.id] ? pair[field.id].push(ans) : pair[field.id] = [ans]
       );
+    });
     const compiled = Object.entries(pair).map((sect) => sect[1].map((topic)=>topic.label).join(', ')).join(' \u00B7 ');
     return compiled;
   };
+
+  const answerSummary = summarize();
+  const missingSummary = missingFields.length > 0
+    ? `Still needed: ${missingFields.map((field) => field.fieldLabel).join(', ')}`
+    : '';
+  const sectionSummary = hasNoOperationsQuestions
+    ? noOperationsInfoMessage
+    : awaitingEarlierAnswers
+      ? pendingOperationsMessage
+      : [missingSummary, answerSummary].filter(Boolean).join(' \u00B7 ');
 
   const handleContinueClick = (e:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
@@ -188,8 +208,24 @@ export const FormSection: React.FC<FormSectionProps> = ({
           </div>
         );
       })}
+      {hasNoOperationsQuestions && (
+        <p className='section-guidance section-guidance-optional'>
+          {noOperationsInfoMessage}
+        </p>
+      )}
+      {awaitingEarlierAnswers && (
+        <p className='section-guidance'>{pendingOperationsMessage}</p>
+      )}
+      {missingFields.length > 0 && (
+        <div className='section-guidance section-guidance-required' aria-live='polite'>
+          <p>To complete this section, answer:</p>
+          <ul>
+            {missingFields.map((field) => <li key={field.id}>{field.fieldLabel}</li>)}
+          </ul>
+        </div>
+      )}
       <div className="section-summary">
-        {summarize()}
+        {sectionSummary}
       </div>
 
 

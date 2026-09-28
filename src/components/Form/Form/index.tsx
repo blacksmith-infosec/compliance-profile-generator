@@ -6,6 +6,7 @@ import {
   FormSectionProps,
 } from '../form.d.tsx';
 import { useComplianceProfile } from '../../../providers/ComplianceProfileProvider';
+import { getMissingFields, isSectionComplete } from '../completion';
 
 export const Form: React.FC<FormProps> = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -35,8 +36,22 @@ export const Form: React.FC<FormProps> = () => {
     });
   };
 
+  const missingBySection = sections.map((section, index) => ({
+    section,
+    index,
+    missing: getMissingFields(section.fields, answers),
+  })).filter(({ missing }) => missing.length > 0);
+
+  const openMissingSection = (index: number, sectionNum: number) => {
+    setIndexOfExpandedSection(index);
+    document.querySelector(`[data-section="${sectionNum}"]`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
-    <form id='profile-form' className='form-pannel' ref={formRef}>
+    <form id='profile-form' className='form-panel' ref={formRef}>
       <ProfileIdentifier
         clientName={clientName}
         preperName={preperName}
@@ -55,9 +70,30 @@ export const Form: React.FC<FormProps> = () => {
           answers={answers}
           onAnswerChange={handleAnswerChange}
           setIndexOfExpandedSection={setIndexOfExpandedSection}
+          precedingSectionsComplete={sections.slice(0, index).every((earlier) =>
+            isSectionComplete(earlier.fields, answers))}
           collapsed={!(index === indexOfExpandedSection)} // First section should be displayed
         />
       ))}
+      {!allSectionsComplete && (
+        <div className='form-missing' role='status'>
+          <p>To generate a profile, please answer:</p>
+          <ul>
+            {missingBySection.map(({ section, index, missing }) => (
+              <li key={section.sectionNum}>
+                <button
+                  type='button'
+                  className='form-missing-link'
+                  onClick={() => openMissingSection(index, section.sectionNum)}
+                >
+                  {section.sectionTitle}
+                </button>
+                {': ' + missing.map((field) => field.fieldLabel).join(', ')}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className = 'form-footer'>
         <button
           type='submit'

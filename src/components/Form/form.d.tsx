@@ -20,6 +20,7 @@ export interface FormSectionProps {
   setIndexOfExpandedSection: (index: number) => void;
   collapsed?: boolean;
   disabled?: boolean;
+  precedingSectionsComplete?: boolean;
 }
 
 export interface FieldCondition {
