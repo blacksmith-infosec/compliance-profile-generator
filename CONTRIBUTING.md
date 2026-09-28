@@ -62,12 +62,12 @@ npm run dev
 We welcome various types of contributions:
 
 * **Bug fixes** - Fix issues reported in GitHub Issues
-* **New features** - Add new security checks or scanners
-* **Documentation** - Improve README, comments, or add examples
-* **Tests** - Add or improve test coverage
-* **Security improvements** - Enhance security features
-* **UI/UX improvements** - Make the tool more user-friendly
-* **Performance optimizations** - Make the tool faster or more efficient
+* **New features** - Add support for additional compliance frameworks, profile templates, or evaluation capabilities
+* **Documentation** - Improve README, contribution docs, comments, or usage examples
+* **Tests** - Add or improve test coverage for profile generation and compliance evaluation logic
+* **Compliance logic improvements** - Improve rule mapping, validation behavior, and profile accuracy
+* **UI/UX improvements** - Make profile creation and results interpretation more user-friendly
+* **Performance optimizations** - Make compliance profile processing faster and more efficient
 
 ### Before You Start
 
@@ -212,15 +212,16 @@ Include:
 Example:
 
 ```markdown
-**Bug**: Domain scanner fails on internationalized domain names
+**Bug**: Profile generation shows incorrect framework recommendations after updating form responses
 
 **Steps to Reproduce**:
-1. Navigate to Domain Scan page
-2. Enter domain: münchen.de
-3. Click "Run Scanners"
+1. Open the Compliance Profile Generator form
+2. Select a cloud-hosted architecture and strict data residency requirements
+3. Submit responses and generate the profile
+4. Edit responses to indicate on-premise hosting and regenerate
 
-**Expected**: Scanner should process the domain
-**Actual**: Error message "Invalid domain format"
+**Expected**: Recommendations update to match the revised responses
+**Actual**: Previously suggested cloud-focused frameworks remain in the generated profile
 
 **Environment**: Chrome 119, macOS 14.1
 ```
