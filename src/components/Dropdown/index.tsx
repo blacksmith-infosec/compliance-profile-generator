@@ -106,6 +106,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
         break;
       case 'Home':
         e.preventDefault();
+        if (isOpen && allOptions.length > 0) {
+          setFocusedIndex(0);
+        }
         break;
       case 'End':
         e.preventDefault();
