@@ -27,7 +27,7 @@ type SchemaSection = Omit<FormSectionProps, 'fields' | 'answers' | 'onAnswerChan
 export interface Evaluator {
   level: 'definite' | 'likely' | 'consider';
   reason: string;
-  conditions: Record<string, string>;
+  conditions: Record<string, string | string[]>;
 }
 
 export interface Framework {
@@ -38,6 +38,7 @@ export interface Framework {
   reference_url: string;
   is_baseline?: boolean;
   suppressed_by_baseline?: boolean;
+  suppressed_by?: string[];
   evaluators: Evaluator[];
   first_steps: string[];
 }

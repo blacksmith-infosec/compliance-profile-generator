@@ -9,11 +9,10 @@ import React, {
 import {
   ComplianceProfile,
   Framework,
-  Evaluator,
-  EvaluatedFramework,
   SchemaField,
   SchemaSection,
 } from '../../types/profileResults';
+import { evaluateProfile } from '../../modules/evaluation';
 import formData from '../../../data/form-schema.json';
 import frameworksData from '../../../data/frameworks.json';
 import {
@@ -86,86 +85,6 @@ const normalizeSections = (sections: SchemaSection[]): FormSectionProps[] => {
     onAnswerChange: () => undefined,
     setIndexOfExpandedSection: () => undefined,
   }));
-};
-
-const levelWeight: Record<Evaluator['level'], number> = {
-  consider: 1,
-  likely: 2,
-  definite: 3,
-};
-
-const evaluateFramework = (framework: Framework, answers: FormAnswers): EvaluatedFramework | null => {
-  let bestLevel: Evaluator['level'] | null = null;
-  let bestReason = '';
-
-  framework.evaluators.forEach((evaluator) => {
-    const isMatch = Object.entries(evaluator.conditions).every(([field, value]) => {
-      if (field.endsWith('_includes')) {
-        const actualField = field.replace('_includes', '');
-        const answer = answers[actualField];
-        return Array.isArray(answer) && answer.some((item) => item.value === value);
-      } else {
-        const answer = answers[field];
-        return Array.isArray(answer) && answer.some((item) => item.value === value);
-      }
-    });
-
-    if (!isMatch) {
-      return;
-    }
-
-    if (!bestLevel || levelWeight[evaluator.level] > levelWeight[bestLevel]) {
-      bestLevel = evaluator.level;
-      bestReason = evaluator.reason;
-    }
-  });
-
-  if (!bestLevel) {
-    return null;
-  }
-
-  return {
-    ...framework,
-    matchLevel: bestLevel,
-    matchReason: bestReason,
-  };
-};
-
-const evaluateProfile = (
-  frameworks: Framework[],
-  answers: FormAnswers,
-  identity: ComplianceProfile['identity'],
-): ComplianceProfile => {
-  const definite: EvaluatedFramework[] = [];
-  const likely: EvaluatedFramework[] = [];
-  const consider: EvaluatedFramework[] = [];
-
-  frameworks.forEach((framework) => {
-    const result = evaluateFramework(framework, answers);
-    if (!result) {
-      return;
-    }
-
-    if (result.matchLevel === 'definite') {
-      definite.push(result);
-      return;
-    }
-
-    if (result.matchLevel === 'likely') {
-      likely.push(result);
-      return;
-    }
-
-    consider.push(result);
-  });
-
-  return {
-    date: new Date(),
-    definite,
-    likely,
-    consider,
-    identity,
-  };
 };
 
 const ComplianceProfileContext = createContext<ComplianceProfileContextType | undefined>(undefined);
