@@ -41,16 +41,16 @@ git clone https://github.com/YOUR_USERNAME/compliance-profile-generator.git
 cd compliance-profile-generator
 
 # Install dependencies
-npm install
+npm ci
 
 # Start the development server
-npm run dev
+npm run start
 ```
 
 ### Available Scripts
 
 * `npm run build` - Build for production
-* `npm run start` - Preview production build locally
+* `npm run start` - Start the development server
 * `npm run test` - Run test suite
 * `npm run test:watch` - Run tests and reload with file changes
 * `npm run lint` - Run ESLint
@@ -96,10 +96,10 @@ We welcome various types of contributions:
 
 ### Naming Conventions
 
-* **Components**: PascalCase (e.g., `DomainScanner.tsx`)
-* **Utilities**: camelCase (e.g., `domainValidation.ts`)
-* **Types**: PascalCase (e.g., `DomainScanResult`)
-* **Constants**: UPPER\_SNAKE\_CASE (e.g., `MAX_REQUESTS_PER_WINDOW`)
+* **Components**: PascalCase (e.g., `ProfileSummary.tsx`)
+* **Utilities**: camelCase (e.g., `profileValidation.ts`)
+* **Types**: PascalCase (e.g., `ProfileResult`)
+* **Constants**: UPPER\_SNAKE\_CASE (e.g., `MAX_LOGO_SIZE`)
 
 ## Testing
 
@@ -139,7 +139,7 @@ npm test -- --watch
 npm test -- path/to/file.test.ts
 
 # Generate coverage report
-npm run test:watch
+npm test
 ```
 
 ## Pull Request Process
@@ -167,7 +167,7 @@ npm run test:watch
    * Use clear, descriptive commit messages
    * Reference issue numbers when applicable
    ```bash
-   git commit -m "feat: add domain validation for scanner input (#123)"
+   git commit -m "fix: handle revenue thresholds in profile rules (#123)"
    ```
 
 5. **Push to your fork**:
@@ -209,23 +209,6 @@ Include:
    * Operating system
    * Any relevant console errors
 
-Example:
-
-```markdown
-**Bug**: Profile generation shows incorrect framework recommendations after updating form responses
-
-**Steps to Reproduce**:
-1. Open the Compliance Profile Generator form
-2. Select a cloud-hosted architecture and strict data residency requirements
-3. Submit responses and generate the profile
-4. Edit responses to indicate on-premise hosting and regenerate
-
-**Expected**: Recommendations update to match the revised responses
-**Actual**: Previously suggested cloud-focused frameworks remain in the generated profile
-
-**Environment**: Chrome 119, macOS 14.1
-```
-
 ## Suggesting Enhancements
 
 We love new ideas! When suggesting enhancements:
@@ -236,34 +219,13 @@ We love new ideas! When suggesting enhancements:
 4. **Consider alternatives** - are there other approaches?
 5. **Think about implementation** - is it feasible?
 
-### Enhancement Template
-
-```markdown
-**Feature Request**: Add HTTPS enforcement check
-
-**Problem**: Users can't easily check if their site enforces HTTPS
-
-**Proposed Solution**:
-Add a new scanner that checks:
-- HTTP to HTTPS redirect
-- HSTS header presence
-- HSTS preload status
-
-**Alternatives Considered**:
-- Could be part of existing security headers check
-- Could use external API vs custom implementation
-
-**Additional Context**:
-This would help users identify mixed content issues
-```
-
 ## Security Considerations
 
 ### Security-First Development
 
 Since this is a security assessment tool, please:
 
-* **Validate all inputs** - especially user-provided domains and JSON
+* **Validate all inputs** - including uploaded logos and framework rule data
 * **Sanitize outputs** - prevent XSS in displayed results
 * **Consider privacy** - all data should stay local to the browser
 * **Review dependencies** - check for known vulnerabilities

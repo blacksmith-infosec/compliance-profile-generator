@@ -1,7 +1,7 @@
 {
   "name": "blacksmith-compliance-profile-generator",
   "version": "0.3.0",
-  "description": "A free risk assessment tool for MSPs to evaluate their client's and prospect's security posture.",
+  "description": "A client-side compliance framework profile generator for MSPs, vCISOs, and auditors.",
   "type": "module",
   "scripts": {
     "build": "vite build",
@@ -31,7 +31,9 @@
     "eslint": "^10.0.3"
   },
   "dependencies": {
-    "jspdf": "^4.2.1"
+    "jspdf": "^4.2.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "allowScripts": {
     "fsevents@2.3.3": true

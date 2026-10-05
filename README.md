@@ -23,7 +23,7 @@ The 42 frameworks currently covered include HIPAA, PCI DSS, NIST 800-171, CMMC, 
 1. Install dependencies:
 
    ```bash
-   npm install
+   npm ci
    npm run start
    ```
 
@@ -31,17 +31,21 @@ Then visit `http://localhost:8081`.
 
 ## Deploy
 
-The tool is a static site and can be hosted anywhere that serves static files. Recommended options:
+Build the site with `npm run build` and serve the generated `dist` directory.
+To preview that build locally, run `npx vite preview`.
 
-- **GitHub Pages**: enable Pages in repository settings, source `main` branch, root folder
-- **Cloudflare Pages**: connect the GitHub repo, no build command needed, output directory is the root
-- **Netlify, Vercel, Render**: connect repo, no build step required
+- **GitHub Pages**: select GitHub Actions as the Pages source. The included workflow builds and deploys `dist`.
+- **Cloudflare Pages, Netlify, Vercel, Render**: use `npm ci && npm run build` as the build command and `dist` as the output directory.
+- **Other static hosts**: upload the contents of `dist`, including license notices and `THIRD-PARTY-LICENSES.md`.
+
+The repository's `CNAME` is for Blacksmith's deployment. Configure your own domain
+when hosting a fork. For a GitHub Pages project subpath, set Vite's `base` to that subpath.
 
 Blacksmith InfoSec hosts a working copy at https://profile.blacksmithinfosec.com.
 
 ## How the rules work
 
-Every framework in `data/frameworks.js` has a list of `evaluators`. Each evaluator has:
+Every framework in `data/frameworks.json` has a list of `evaluators`. Each evaluator has:
 
 - A `level`: `definite`, `likely`, or `consider`
 - A human-readable `reason` shown to users
@@ -53,10 +57,14 @@ Supported condition operators:
 
 | Operator | Example | Meaning |
 |---|---|---|
-| Direct match | `{ industry: "healthcare" }` | The `industry` field equals `"healthcare"` |
+| Direct match | `{ industry: "healthcare" }` | The industry derived from `business_type` equals `"healthcare"` |
 | `_includes` | `{ data_types_includes: "phi" }` | The `data_types` array contains `"phi"` |
 | `_in` | `{ revenue_in: ["50m_250m", "over_250m"] }` | The `revenue` value is in the array |
 | Empty `{}` | `{ conditions: {} }` | Always fires (used for baseline frameworks) |
+
+Frameworks can declare `suppressed_by` IDs to avoid duplicate results. A matched
+`is_baseline` framework at definite or likely level suppresses generic frameworks
+marked `suppressed_by_baseline`. All matching reasons at the highest level are retained.
 
 This design keeps all compliance logic auditable and contributable in a single file.
 
@@ -90,7 +98,8 @@ This is an indicative tool. It uses heuristics based on common applicability tri
 
 ## License
 
-Apache. See [LICENSE](LICENSE) for details.
+Apache 2.0. See [LICENSE](LICENSE).
+Blacksmith names and logos are not licensed for use as your own branding.
 
 ## About Blacksmith InfoSec
 
