@@ -52,6 +52,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({
     )
   );
 
+  const selectableIndexes = allDisplay.flatMap((option, index) => option.group ? [] : [index]);
+
   // Close checkbox when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -80,7 +82,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
-          setFocusedIndex(0);
+          setFocusedIndex(selectableIndexes[0] ?? -1);
         } else if (focusedIndex >= 0) {
           const focused = allDisplay[focusedIndex];
           if (!(focused.group)) {
@@ -100,19 +102,23 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         break;
       case 'ArrowDown':
         e.preventDefault();
-        setFocusedIndex((prev) => (prev < allOptions.length - 1 ? prev + 1 : prev));
+        setFocusedIndex((prev) => {
+          return selectableIndexes.find((index) => index > prev) ?? prev;
+        });
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        setFocusedIndex((prev) => {
+          return selectableIndexes.slice().reverse().find((index) => index < prev) ?? prev;
+        });
         break;
       case 'Home':
         e.preventDefault();
-        setFocusedIndex(0);
+        setFocusedIndex(selectableIndexes[0] ?? -1);
         break;
       case 'End':
         e.preventDefault();
-        setFocusedIndex(allOptions.length - 1);
+        setFocusedIndex(selectableIndexes[selectableIndexes.length - 1] ?? -1);
         break;
     }
   };
@@ -132,6 +138,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   }, [focusedIndex, isOpen]);
 
   const handleSelect = (optionValue: FormAnswer) => {
+    if (disabled) return;
     onChange(optionValue);
     setFocusedIndex(-1);
     buttonRef.current?.focus();
@@ -149,21 +156,22 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           className={'custom-checkbox-list'}
           role='listbox'
           aria-labelledby={id}
+          aria-disabled={disabled}
           onKeyDown={handleKeyDown}
         >
           {allDisplay.map((option, index) => (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events
             <li
-              key={option.value}
+              key={`${option.value}-${index}`}
               className={`custom-checkbox-option${
                 option.group ? ' group' : `${
                   values.includes(option.value) ? ' selected' : ''}`
                 }${
                 index === focusedIndex ? ' focused' : ''}`
               }
-              role='option'
-              aria-selected={option.value in values}
-              onClick={() => handleSelect({
+              role={option.group ? 'presentation' : 'option'}
+              aria-selected={option.group ? undefined : values.includes(option.value)}
+              onClick={option.group ? undefined : () => handleSelect({
                 value: option.value,
                 label: option.label,
                 group: option.groupName ? option.groupName : ''})}
