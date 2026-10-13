@@ -55,6 +55,7 @@ describe('Results download', () => {
       handleClientNameChange: vi.fn(),
       handlePreperNameChange: vi.fn(),
       handleLogoImgChange: vi.fn(),
+      handleFollowUpOwnerChange: vi.fn(),
       resetForm: vi.fn(),
     });
 
@@ -62,6 +63,42 @@ describe('Results download', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
 
     expect(downloadProfilePDF).toHaveBeenCalledOnce();
+    expect(downloadProfilePDF).toHaveBeenCalledWith(profile);
+  });
+
+  it('assigns a follow-up owner and can export a profile containing only unresolved answers', () => {
+    const handleFollowUpOwnerChange = vi.fn();
+    const profile: ComplianceProfile = {
+      definite: [], likely: [], consider: [],
+      followUps: [{
+        fieldId: 'contracts', fieldLabel: 'Contract requirements', owner: 'Legal',
+        action: 'Review signed contracts with the account owner.', frameworkIds: [],
+      }],
+      identity: { clientName: 'Client', preperName: 'MSP', logoImg: null },
+    };
+    vi.mocked(useComplianceProfile).mockReturnValue({
+      sections: [], frameworks: [], answers: {},
+      clientName: 'Client', preperName: 'MSP', logoImg: null,
+      indexOfExpandedSection: 0,
+      allSectionsComplete: true,
+      hasGeneratedProfile: true,
+      profile,
+      generateProfile: vi.fn(),
+      setIndexOfExpandedSection: vi.fn(),
+      handleAnswerChange: vi.fn(),
+      handleClientNameChange: vi.fn(),
+      handlePreperNameChange: vi.fn(),
+      handleLogoImgChange: vi.fn(),
+      resetForm: vi.fn(),
+      handleFollowUpOwnerChange,
+    });
+
+    render(<Results />);
+    const owner = screen.getByRole('textbox', { name: 'Owner for Contract requirements' });
+    expect((owner as HTMLInputElement).value).toBe('Legal');
+    fireEvent.change(owner, { target: { value: 'Alex Morgan' } });
+    expect(handleFollowUpOwnerChange).toHaveBeenCalledWith('contracts', 'Alex Morgan');
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
     expect(downloadProfilePDF).toHaveBeenCalledWith(profile);
   });
 });

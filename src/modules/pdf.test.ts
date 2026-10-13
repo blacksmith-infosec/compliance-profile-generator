@@ -321,6 +321,87 @@ describe('downloadProfilePDF', () => {
     expect(pdfCalls.save).not.toHaveBeenCalled();
   });
 
+  it('exports possible frameworks with exact conditions and no factual applicability reason', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      definite: [],
+      possible: [{
+        ...framework,
+        matchLevel: 'possible',
+        matchReason: 'Do not present this as a fact',
+        first_steps: ['Review the requirements'],
+        pendingMatches: [{
+          level: 'definite', reason: 'Customer contracts require SOC 2',
+          conditions: [{
+            fieldId: 'contracts', fieldLabel: 'Contract requirements', expectedLabels: ['SOC 2', 'Both'],
+          }],
+        }],
+      }],
+    }));
+
+    expect(drawnText()).toEqual(expect.arrayContaining([
+      'Possible - verify unknown answers',
+      'Would qualify as Definite if all of these answers are confirmed:',
+      'Contract requirements: SOC 2 or Both',
+      'Reason if confirmed: Customer contracts require SOC 2',
+      'IF CONFIRMED, WHERE TO START',
+    ]));
+    expect(drawnText()).not.toContain('Do not present this as a fact');
+    expect(drawnText()).not.toContain('WHY THIS APPLIES');
+    expect(drawnText()).toContain('1 frameworks identified · 1 possible (unconfirmed)');
+    expect(pdfCalls.save).toHaveBeenCalledOnce();
+  });
+
+  it('keeps known reasons and conditional upgrades distinct in the exported profile', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      definite: [],
+      consider: [{
+        ...framework, matchLevel: 'consider',
+        pendingMatches: [{
+          level: 'definite', reason: 'Customer contracts require SOC 2',
+          conditions: [{ fieldId: 'contracts', fieldLabel: 'Contract requirements', expectedLabels: ['SOC 2'] }],
+        }],
+      }],
+    }));
+
+    expect(drawnText()).toEqual(expect.arrayContaining([
+      'Recommended', 'WHY THIS APPLIES', 'Reason',
+      'Would qualify as Definite if all of these answers are confirmed:',
+      'Reason if confirmed: Customer contracts require SOC 2',
+    ]));
+    expect(drawnText()).not.toContain('Definitely applies');
+  });
+
+  it('exports follow-up questions, actions and assigned owners even without any frameworks', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      definite: [],
+      followUps: [{
+        fieldId: 'contracts', fieldLabel: 'Contract requirements', owner: 'Alex Morgan',
+        action: 'Review signed contracts with the account owner.', frameworkIds: [],
+      }],
+    }));
+
+    expect(drawnText()).toEqual(expect.arrayContaining([
+      'Follow-up items', '1. Contract requirements', 'Answer: Unknown', 'Owner: Alex Morgan',
+      'Action: Review signed contracts with the account owner.',
+      '0 frameworks identified · 1 follow-up item',
+    ]));
+    expect(drawnText().some((text) => typeof text === 'string' && text.startsWith('Provisional profile:'))).toBe(true);
+    expect(pdfCalls.save).toHaveBeenCalledOnce();
+    expect(alert).not.toHaveBeenCalled();
+  });
+
+  it('identifies affected frameworks and leaves explicitly cleared owners unassigned', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      followUps: [{
+        fieldId: 'contracts', fieldLabel: 'Contract requirements', owner: ' ',
+        action: 'Review signed contracts.', frameworkIds: ['test'],
+      }],
+    }));
+
+    expect(drawnText()).toContain('May affect: Test framework');
+    expect(drawnText()).toContain('Owner: Unassigned');
+  });
+
   it('reports an invalid logo instead of downloading a PDF without it', async () => {
     const logo = new File(['invalid'], 'invalid.png', { type: 'image/png' });
 

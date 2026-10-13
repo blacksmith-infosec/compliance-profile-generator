@@ -46,7 +46,10 @@ describe('ComplianceProfileProvider', () => {
     const business = profileState.sections[1].fields.find((field) => field.id === 'business_type');
     expect(business?.options).toContainEqual({
       group: 'Other',
-      options: [{ value: 'other', label: 'Other' }],
+      options: [
+        { value: 'other', label: 'Other' },
+        { value: 'unknown', label: 'Unknown / needs verification' },
+      ],
     });
     expect(profileState.answers).toEqual({});
     expect(profileState.indexOfExpandedSection).toBe(0);
@@ -93,6 +96,48 @@ describe('ComplianceProfileProvider', () => {
       logoImg: logo,
     });
     expect(profileState.profile.date).toBeInstanceOf(Date);
+  });
+
+  it('accepts unknown as a completed answer and assigns editable follow-up owners', () => {
+    mountProfile();
+
+    act(() => {
+      profileState.handleAnswerChange('operating_regions', answer('canada'));
+      profileState.handleAnswerChange('business_type', answer('saas'));
+      profileState.handleAnswerChange('public_status', answer('private'));
+      profileState.handleAnswerChange('data_types', answer('none'));
+      profileState.handleAnswerChange('customer_types', answer('businesses'));
+    });
+    act(() => {
+      profileState.handleAnswerChange('contracts', answer('unknown'));
+      profileState.handleAnswerChange('provider_role', answer('saas'));
+      profileState.generateProfile();
+    });
+
+    expect(profileState.allSectionsComplete).toBe(true);
+    expect(profileState.profile.followUps).toEqual([
+      expect.objectContaining({ fieldId: 'contracts', owner: expect.any(String) }),
+    ]);
+    expect(profileState.profile.definite.some((framework) => framework.id === 'iso_27001')).toBe(false);
+    expect(profileState.profile.likely.find((framework) => framework.id === 'soc2')?.pendingMatches)
+      .toEqual(expect.arrayContaining([expect.objectContaining({ level: 'definite' })]));
+
+    act(() => profileState.handleFollowUpOwnerChange('contracts', 'Alex '));
+    expect(profileState.profile.followUps?.[0].owner).toBe('Alex ');
+    act(() => profileState.handleFollowUpOwnerChange('contracts', 'Alex Chen'));
+    expect(profileState.profile.followUps?.[0].owner).toBe('Alex Chen');
+    expect(profileState.hasGeneratedProfile).toBe(true);
+
+    act(() => profileState.handleAnswerChange('contracts', answer('none')));
+    expect(profileState.profile.followUps).toEqual([]);
+    expect(profileState.hasGeneratedProfile).toBe(false);
+
+    act(() => profileState.resetForm());
+    act(() => {
+      profileState.handleAnswerChange('business_type', answer('saas'));
+      profileState.handleAnswerChange('contracts', answer('unknown'));
+    });
+    expect(profileState.profile.followUps?.[0].owner).not.toBe('Alex Chen');
   });
 
   it('resets answers, identity, section navigation, and generated results', () => {

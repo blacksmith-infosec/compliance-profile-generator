@@ -384,6 +384,8 @@ a:hover {
   padding-left: var(--space-3);
 }
 
+.intro-note + .intro-note { margin-top: var(--space-3); }
+
 /* =================================================================
    Two-column layout
    ================================================================= */
@@ -1072,6 +1074,57 @@ a:hover {
 .framework-card.definite { border-left: 3px solid var(--success); }
 .framework-card.likely { border-left: 3px solid var(--warning); }
 .framework-card.consider { border-left: 3px solid var(--info); }
+.framework-card.possible { border-left: 3px dashed var(--warning); }
+
+.results-explanation {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.framework-pending {
+  margin-block: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.framework-pending p { margin: 0; }
+.framework-pending ul { padding-left: var(--space-5); margin-block: var(--space-2); }
+.framework-pending .conditional-reason { color: var(--text-muted); }
+
+.follow-up-card {
+  margin-bottom: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.follow-up-card h4 { margin: 0; font-size: 14px; }
+.follow-up-status, .follow-up-frameworks { color: var(--text-muted); }
+.follow-up-card .field-label { margin-top: var(--space-4); }
+
+.follow-up-owner {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font: inherit;
+}
+
+.follow-up-owner:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .framework-name {
   font-family: var(--font-body);

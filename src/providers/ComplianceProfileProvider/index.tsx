@@ -40,6 +40,7 @@ interface ComplianceProfileContextType {
   handleClientNameChange: (value: string) => void;
   handlePreperNameChange: (value: string) => void;
   handleLogoImgChange: (file: File | null) => void;
+  handleFollowUpOwnerChange: (fieldId: string, owner: string) => void;
   resetForm: () => void;
 }
 
@@ -105,6 +106,7 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
   const [clientName, setClientName] = useState('');
   const [preperName, setPreperName] = useState('');
   const [hasGeneratedProfile, setHasGeneratedProfile] = useState(false);
+  const [followUpOwners, setFollowUpOwners] = useState<Record<string, string>>({});
 
   const allSectionsComplete = areAllFormSectionsComplete(sections, answers);
 
@@ -120,6 +122,11 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
     setLogoImg(null);
     setIndexOfExpandedSection(0);
     setHasGeneratedProfile(false);
+    setFollowUpOwners({});
+  };
+
+  const handleFollowUpOwnerChange = (fieldId: string, owner: string) => {
+    setFollowUpOwners((prev) => ({ ...prev, [fieldId]: owner }));
   };
 
   const generateProfile = () => {
@@ -127,8 +134,8 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
   };
 
   const profile = useMemo(
-    () => evaluateProfile(frameworks, answers, { clientName, preperName, logoImg }),
-    [frameworks, answers, clientName, preperName, logoImg],
+    () => evaluateProfile(frameworks, answers, { clientName, preperName, logoImg }, followUpOwners),
+    [frameworks, answers, clientName, preperName, logoImg, followUpOwners],
   );
 
   const value: ComplianceProfileContextType = {
@@ -148,6 +155,7 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
     handleClientNameChange: setClientName,
     handlePreperNameChange: setPreperName,
     handleLogoImgChange: setLogoImg,
+    handleFollowUpOwnerChange,
     resetForm,
   };
 
