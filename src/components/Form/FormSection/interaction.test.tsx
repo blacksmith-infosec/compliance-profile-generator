@@ -110,6 +110,22 @@ describe('FormSection interactions', () => {
     expect(onAnswerChange).toHaveBeenCalledWith('operating_regions', [answer('canada', 'Canada')]);
   });
 
+  it('selects Unknown separately from None in onboarding', () => {
+    const onAnswerChange = vi.fn();
+    renderSection('Data handled', { data_types: [answer('none', 'None of the above')] }, onAnswerChange);
+
+    fireEvent.click(screen.getByRole('option', { name: 'Unknown / needs verification' }));
+    expect(onAnswerChange).toHaveBeenLastCalledWith('data_types', [
+      answer('unknown', 'Unknown / needs verification'),
+    ]);
+  });
+
+  it('keeps jurisdiction-specific options visible when operating regions are unknown', () => {
+    renderSection('Data handled', { operating_regions: [answer('unknown', 'Unknown / needs verification')] });
+
+    expect(screen.getByRole('option', { name: 'Controlled Unclassified Information (CUI)' })).toBeTruthy();
+  });
+
   it('passes a selected dropdown answer as a single-value array', () => {
     const onAnswerChange = vi.fn();
     renderSection('Operations', { data_types: [answer('pci', 'Payment card data')] }, onAnswerChange);

@@ -4,7 +4,7 @@ import type { Framework } from '../types/profileResults';
 import type { FormAnswers } from '../components/Form/form.d.tsx';
 import { evaluateFramework, evaluateProfile } from './evaluation';
 
-const frameworks: Framework[] = frameworksData.frameworks;
+const frameworks = frameworksData.frameworks as Framework[];
 const identity = { clientName: '', preperName: '', logoImg: null };
 const answersFor = (values: Record<string, string | string[]>): FormAnswers =>
   Object.fromEntries(Object.entries(values).map(([field, value]) => [field,
@@ -97,5 +97,125 @@ describe('framework evaluation', () => {
     ] };
     const profile = evaluateProfile([specific, framework('nist_csf')], {}, identity);
     expect(profile.consider.map((item) => item.id)).toContain('nist_csf');
+  });
+
+  it('distinguishes an unknown requirement from an explicit negative or an unanswered question', () => {
+    const possible = evaluateFramework(framework('soc2'), answersFor({ contracts: 'unknown' }));
+    expect(possible?.matchLevel).toBe('possible');
+    expect(possible?.matchReason).toContain('Contractual or customer-imposed requirements');
+    expect(possible?.pendingMatches).toEqual([{
+      level: 'definite',
+      reason: 'Customers require SOC 2 reports',
+      conditions: [{
+        fieldId: 'contracts',
+        fieldLabel: 'Contractual or customer-imposed requirements',
+        expectedLabels: ['Customer-mandated SOC 2 reports'],
+      }],
+    }]);
+    expect(evaluateFramework(framework('soc2'), answersFor({ contracts: 'none' }))).toBeNull();
+    expect(evaluateFramework(framework('soc2'), {})).toBeNull();
+  });
+
+  it('preserves a known tier while identifying the answer that could raise it', () => {
+    const result = evaluateFramework(framework('soc2'), answersFor({
+      provider_role: 'saas', contracts: 'unknown',
+    }));
+    expect(result?.matchLevel).toBe('likely');
+    expect(result?.matchReason).toBe('Operates as a SaaS provider');
+    expect(result?.pendingMatches?.[0].level).toBe('definite');
+    expect(result?.pendingMatches?.[0].conditions[0].fieldId).toBe('contracts');
+  });
+
+  it('does not show speculative conditions that cannot improve an already confirmed tier', () => {
+    const result = evaluateFramework(framework('iso_27001'), answersFor({
+      operating_regions: 'unknown', contracts: 'iso27001',
+    }));
+    expect(result?.matchLevel).toBe('definite');
+    expect(result?.pendingMatches).toBeUndefined();
+  });
+
+  it('keeps known mismatches and missing answers from becoming speculative matches', () => {
+    expect(evaluateFramework(framework('hipaa'), answersFor({
+      operating_regions: 'uk', data_types: 'unknown', business_type: 'other', customer_types: 'consumers',
+    }))).toBeNull();
+    expect(evaluateFramework(framework('ny_dfs_500_limited_exemption'), answersFor({
+      business_type: 'bank_credit_union', us_states: 'ny', employees: 'unknown',
+    }))).toBeNull();
+  });
+
+  it('only speculates about contractual requirements that could be selected in the current region', () => {
+    const ukAnswers = answersFor({ operating_regions: 'uk', contracts: 'unknown' });
+    expect(evaluateFramework(framework('cmmc'), ukAnswers)).toBeNull();
+    expect(evaluateFramework(framework('nist_800_171'), ukAnswers)).toBeNull();
+    expect(evaluateFramework(framework('soc2'), ukAnswers)?.matchLevel).toBe('possible');
+    expect(evaluateFramework(framework('cmmc'), answersFor({
+      operating_regions: 'unknown', contracts: 'unknown',
+    }))?.matchLevel).toBe('possible');
+  });
+
+  it('maps an unknown derived industry back to the business question that must be resolved', () => {
+    const result = evaluateFramework(framework('hipaa'), answersFor({
+      business_type: 'unknown', operating_regions: 'us',
+    }));
+    expect(result?.matchLevel).toBe('possible');
+    expect(result?.pendingMatches?.[0].conditions[0]).toMatchObject({
+      fieldId: 'business_type', fieldLabel: 'Type of business',
+    });
+    expect(result?.pendingMatches?.[0].conditions[0].expectedLabels).toContain('Medical practice');
+  });
+
+  it('records all unresolved conditions and retains a known California fallback', () => {
+    const result = evaluateFramework(framework('ccpa_cpra'), answersFor({ us_states: 'ca', revenue: 'unknown' }));
+    expect(result?.matchLevel).toBe('likely');
+    expect(result?.pendingMatches?.[0]).toMatchObject({
+      level: 'definite',
+      conditions: [{ fieldId: 'revenue', expectedLabels: ['$50M to $250M', 'Over $250M'] }],
+    });
+    const allUnknown = evaluateFramework(framework('ny_dfs_500_limited_exemption'), answersFor({
+      business_type: 'bank_credit_union', us_states: 'ny', employees: 'unknown', revenue: 'unknown',
+    }));
+    expect(allUnknown?.matchLevel).toBe('possible');
+    expect(allUnknown?.pendingMatches?.[0].conditions.map((condition) => condition.fieldId))
+      .toEqual(['employees', 'revenue']);
+  });
+
+  it('keeps generic baselines and confirmed frameworks when only their suppressors are possible', () => {
+    const profile = profileFor({
+      business_type: 'bank_credit_union', operating_regions: 'us', us_states: 'ny',
+      employees: 'unknown', revenue: 'unknown', contracts: 'unknown',
+    });
+    expect(profile.possible?.some((item) => item.id === 'ny_dfs_500_limited_exemption')).toBe(true);
+    expect(profile.definite.some((item) => item.id === 'ny_dfs_500')).toBe(true);
+    const contractOnly = profileFor({ contracts: 'unknown' });
+    expect(contractOnly.possible?.some((item) => item.id === 'iso_27001')).toBe(true);
+    expect(contractOnly.consider.map((item) => item.id)).toEqual(expect.arrayContaining(['nist_csf', 'cis_v8']));
+  });
+
+  it('generates one owned follow-up per unknown field and links all affected visible frameworks', () => {
+    const profile = evaluateProfile(frameworks, answersFor({
+      business_type: 'saas', contracts: 'unknown', provider_role: 'saas',
+    }), identity, { contracts: 'Jane Doe' });
+    expect(profile.followUps).toHaveLength(1);
+    expect(profile.followUps?.[0]).toMatchObject({
+      fieldId: 'contracts', fieldLabel: 'Contractual or customer-imposed requirements', owner: 'Jane Doe',
+    });
+    expect(profile.followUps?.[0].action).toContain('Review customer contracts');
+    expect(profile.followUps?.[0].frameworkIds).toEqual(expect.arrayContaining(['soc2', 'iso_27001']));
+  });
+
+  it('creates follow-ups even when unknown answers cannot affect any framework', () => {
+    const profile = evaluateProfile([], answersFor({ employees: 'unknown', contracts: 'none' }), identity);
+    expect(profile.followUps).toEqual([{
+      fieldId: 'employees', fieldLabel: 'Employee count',
+      action: 'Confirm the employee count with HR to resolve size-based compliance scope.',
+      owner: 'HR owner', frameworkIds: [],
+    }]);
+    expect(profile.possible).toEqual([]);
+  });
+
+  it('preserves owner edits including trailing spaces and deliberately empty assignments', () => {
+    const answers = answersFor({ contracts: 'unknown' });
+    expect(evaluateProfile([], answers, identity, { contracts: 'Jane ' }).followUps?.[0].owner).toBe('Jane ');
+    expect(evaluateProfile([], answers, identity, { contracts: '' }).followUps?.[0].owner).toBe('');
   });
 });

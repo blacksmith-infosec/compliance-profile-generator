@@ -8,13 +8,16 @@ Open source under an Apache 2 license. Built and maintained by [Blacksmith InfoS
 
 ## What it does
 
-The tool takes a structured profile of an organization (12 questions across 5 sections) and returns a categorized list of compliance frameworks and regulations that likely apply, sorted into three tiers:
+The tool takes a structured profile of an organization (12 questions across 5 sections) and returns a categorized list of compliance frameworks and regulations that likely apply, sorted into four tiers:
 
 - **Definitely applies** - clear regulatory trigger or contractual requirement
 - **Likely applies** - strong indicators present, verify scope and applicability
+- **Possible** - an unknown answer could trigger this framework; the result identifies the answers to verify
 - **Worth evaluating** - baseline or commonly-relevant standards
 
 Each result includes the framework name, category, brief description, the specific reasons it triggered for this profile, and a link to the authoritative source.
+
+Every question offers **Unknown / needs verification**, distinct from a confirmed No or None. Unknown answers count as answered for onboarding and create follow-up items with suggested owners that you can edit. Related conditional questions remain available until a confirmed answer rules them out. The results and downloadable PDF include the follow-ups, owners, and the specific answers that could change framework applicability. A framework already supported by known answers keeps its confirmed tier and shows any potential higher tier separately.
 
 The 42 frameworks currently covered include HIPAA, PCI DSS, NIST 800-171, CMMC, SOC 2, ISO 27001, GDPR, NIS2, UK GDPR, UK Cyber Essentials, CCPA, NY DFS Part 500 (with Class A and Limited Exemption tier entries), GLBA / FTC Safeguards, SOX, SEC cyber rules, FERPA, COPPA, FedRAMP, CIS Controls, GTIA Cybersecurity Trustmark, NERC CIP, CJIS, IRS 1075, state breach laws, major state privacy laws (TX, MA, CO, VA, CT, NY SHIELD), and state cybersecurity safe harbor laws (OH, UT, CT, IA, OK, TN, NE, TX, OR). Each framework includes a "Where to start" section with actionable first steps.
 
@@ -52,6 +55,8 @@ Every framework in `data/frameworks.json` has a list of `evaluators`. Each evalu
 - A `conditions` object that must match the user's input for the evaluator to fire
 
 When the form is submitted, each framework's evaluators are tested against the input data. The highest-level evaluator that fires determines which tier the framework lands in. All matching reasons at that tier are shown to the user.
+
+Evaluators blocked only by explicit Unknown answers become conditional matches, provided the expected choices remain compatible with known answers and option visibility conditions. Missing answers do not act as Unknown. Conditional matches do not suppress confirmed results or baseline recommendations.
 
 Supported condition operators:
 

@@ -44,8 +44,27 @@ export interface Framework {
 }
 
 export interface EvaluatedFramework extends Framework {
-  matchLevel: Evaluator['level'];
+  matchLevel: Evaluator['level'] | 'possible';
   matchReason: string;
+  pendingMatches?: PendingFrameworkMatch[];
+}
+
+export interface PendingFrameworkMatch {
+  level: Evaluator['level'];
+  reason: string;
+  conditions: {
+    fieldId: string;
+    fieldLabel: string;
+    expectedLabels: string[];
+  }[];
+}
+
+export interface FollowUp {
+  fieldId: string;
+  fieldLabel: string;
+  action: string;
+  owner: string;
+  frameworkIds: string[];
 }
 
 export interface Match {
@@ -59,6 +78,8 @@ export interface ComplianceProfile {
   definite: EvaluatedFramework[];
   likely: EvaluatedFramework[];
   consider: EvaluatedFramework[];
+  possible?: EvaluatedFramework[];
+  followUps?: FollowUp[];
   identity: {
     clientName: string;
     preperName: string;

@@ -22,14 +22,21 @@ const C_LINK: [number, number, number] = [0, 134, 183];       // Picton Blue (da
 const TIER_COLOR = {
   definite: [46, 139, 87],   // #2E8B57 sea green
   likely:   [183, 121, 31],  // #B7791F amber
-  consider: [30, 93, 156]    // #1E5D9C medium blue
+  consider: [30, 93, 156],   // #1E5D9C medium blue
+  possible: [126, 91, 146]
 };
 
 const TIER_LABEL = {
   definite: 'Definitely applies',
   likely:   'Likely applies',
-  consider: 'Recommended'
+  consider: 'Recommended',
+  possible: 'Possible - verify unknown answers'
 };
+
+type Tier = EvaluatedFramework['matchLevel'];
+type GroupedFrameworks = Record<Tier, EvaluatedFramework[]>;
+type FollowUps = NonNullable<ComplianceProfile['followUps']>;
+const CONDITIONAL_TIER_LABEL = { definite: 'Definite', likely: 'Likely', consider: 'Consider' };
 
 type PdfLogo = { dataUrl: string; aspectRatio: number };
 
@@ -76,7 +83,9 @@ export const downloadProfilePDF = async (lastProfileResults: ComplianceProfile) 
     return;
   }
   const data = { ...lastProfileResults };
-  if (!data || !data.definite?.length && !data.likely?.length && !data.consider?.length) {
+  const hasResults = data.definite?.length || data.likely?.length || data.consider?.length ||
+    data.possible?.length || data.followUps?.length;
+  if (!hasResults) {
     alert('Generate a profile first, then download the PDF.');
     return;
   }
@@ -91,10 +100,11 @@ export const downloadProfilePDF = async (lastProfileResults: ComplianceProfile) 
   }
   try {
     generatePDF(
-      [...data.definite, ...data.likely, ...data.consider],
+      [...data.definite, ...data.likely, ...data.consider, ...(data.possible ?? [])],
       data.identity.clientName,
       data.identity.preperName,
-      logo
+      logo,
+      data.followUps ?? []
     );
   } catch {
     // console.error('PDF generation failed:', err);
@@ -104,14 +114,17 @@ export const downloadProfilePDF = async (lastProfileResults: ComplianceProfile) 
 };
 
 // ---- Main generator ------------------------------------------------
-const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName: string, logo: PdfLogo | null) => {
+const generatePDF = (
+  matches: EvaluatedFramework[], clientName: string, mspName: string, logo: PdfLogo | null, followUps: FollowUps,
+) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
   // Group by tier
-  const grouped: Record<'definite' | 'likely' | 'consider', EvaluatedFramework[]> = {
+  const grouped: GroupedFrameworks = {
     definite: [],
     likely: [],
     consider: [],
+    possible: [],
   };
   matches.forEach((m) => {
     if (grouped[m.matchLevel]) grouped[m.matchLevel].push(m);
@@ -119,12 +132,21 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
 
   const state = { y: MARGIN_TOP, page: 1 };
 
-  drawReportHeader(doc, state, clientName, mspName, matches.length, grouped, logo);
+  drawReportHeader(doc, state, clientName, mspName, matches.length, grouped, logo, followUps.length);
 
-  (['definite', 'likely', 'consider'] as const).forEach((tier) => {
+  if (followUps.length > 0) {
+    drawBlockText(doc, state,
+      'Provisional profile: unknown answers remain open questions. ' +
+        'Verify each follow-up, update the form, and generate the profile again.',
+      { size: 9.5, color: C_MUTED, gapAfter: 12 });
+  }
+
+  (['definite', 'likely', 'possible', 'consider'] as const).forEach((tier) => {
     if (grouped[tier].length === 0) return;
     drawTierSection(doc, state, tier, grouped[tier]);
   });
+
+  if (followUps.length > 0) drawFollowUps(doc, state, followUps, matches);
 
   drawFooter(doc, state);
 
@@ -185,8 +207,9 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
     clientName: string,
     mspName: string,
     total: number,
-    grouped: Record<'definite' | 'likely' | 'consider', EvaluatedFramework[]>,
+    grouped: GroupedFrameworks,
     logo: PdfLogo | null,
+    followUpCount: number,
   ) => {
     // Client logo in the top-right corner of the first page.
     if (logo) {
@@ -218,7 +241,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
       ['Prepared for', clientName || 'Not specified'],
       ['Prepared by', mspName || 'Not specified'],
       ['Generated', formatToday()],
-      ['Summary', summaryLine(total, grouped)]
+      ['Summary', summaryLine(total, grouped, followUpCount)]
     ];
 
     setFont(doc, 'normal');
@@ -256,7 +279,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
   const drawTierSection = (
     doc: jsPDF,
     state: { y: number; page: number },
-    tier: 'definite' | 'likely' | 'consider',
+    tier: Tier,
     frameworks: EvaluatedFramework[]
   ) => {
     drawTierHeader(doc, state, tier, frameworks.length);
@@ -269,7 +292,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
   const drawTierHeader = (
     doc: jsPDF,
     state: { y: number; page: number },
-    tier: 'definite' | 'likely' | 'consider',
+    tier: Tier,
     count: number
   ) => {
     ensureSpace(doc, state, 28);
@@ -301,7 +324,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
     doc: jsPDF,
     state: { y: number; page: number },
     framework: EvaluatedFramework,
-    tier: 'definite' | 'likely' | 'consider'
+    tier: Tier
   ) => {
     const steps = framework.first_steps || [];
 
@@ -315,8 +338,20 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
     const estSteps = steps.reduce((sum: number, s: string) => {
       return sum + approxLines(doc, s, CONTENT_W - 30, 9.5) * lineHeight(9.5);
     }, 0);
+    const estPending = (framework.pendingMatches ?? []).reduce((sum, pending) => {
+      const heading = `Would qualify as ${CONDITIONAL_TIER_LABEL[pending.level]} ` +
+        'if all of these answers are confirmed:';
+      const headingHeight = approxLines(doc, heading, CONTENT_W - 18, 9.5) * lineHeight(9.5) + 3;
+      const conditionsHeight = pending.conditions.reduce((height, condition) => {
+        const text = `${condition.fieldLabel}: ${condition.expectedLabels.join(' or ')}`;
+        return height + approxLines(doc, text, CONTENT_W - 32, 9.5) * lineHeight(9.5) + 1;
+      }, 0);
+      const reasonHeight = approxLines(doc, `Reason if confirmed: ${pending.reason}`, CONTENT_W - 18, 9.5) *
+        lineHeight(9.5) + 6;
+      return sum + headingHeight + conditionsHeight + reasonHeight;
+    }, 0);
     const estTotal = estName + estMeta + 8 + estDesc + 8 + estReasonsLabel + 1 + 6 +
-                   estStepsLabel + estSteps + 16;
+                   estPending + estStepsLabel + estSteps + 16;
 
     // If the entire card is shorter than remaining page, avoid splitting it
     // by triggering a page break. Otherwise allow it to flow.
@@ -390,17 +425,30 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
       { x: contentX, maxWidth: contentW, size: 9.5, color: C_BODY, gapAfter: 8 }
     );
 
-    // WHY THIS APPLIES label
-    setFont(doc, 'bold');
-    doc.setFontSize(8);
-    setColor(doc, TIER_COLOR[tier]);
-    ensureSpace(doc, state, lineHeight(8) + 2);
-    doc.text('WHY THIS APPLIES', contentX, state.y + 7);
-    state.y += lineHeight(8) + 2;
+    if (tier !== 'possible') {
+      // Only known answers can support a factual applicability reason.
+      setFont(doc, 'bold');
+      doc.setFontSize(8);
+      setColor(doc, TIER_COLOR[tier]);
+      ensureSpace(doc, state, lineHeight(8) + 2);
+      doc.text('WHY THIS APPLIES', contentX, state.y + 7);
+      state.y += lineHeight(8) + 2;
+      drawBullet(doc, state, '\u2022', framework.matchReason, contentX, contentW, 9.5);
+      state.y += 4;
+    }
 
-    // Reasons (bulleted)
-    drawBullet(doc, state, '\u2022', framework.matchReason, contentX, contentW, 9.5);
-    state.y += 4;
+    framework.pendingMatches?.forEach((pending) => {
+      drawBlockText(doc, state,
+        `Would qualify as ${CONDITIONAL_TIER_LABEL[pending.level]} if all of these answers are confirmed:`,
+        { x: contentX, maxWidth: contentW, size: 9.5, weight: 'bold', gapAfter: 3 });
+      pending.conditions.forEach((condition) => {
+        drawBullet(doc, state, '\u2022',
+          `${condition.fieldLabel}: ${condition.expectedLabels.join(' or ')}`,
+          contentX, contentW, 9.5);
+      });
+      drawBlockText(doc, state, `Reason if confirmed: ${pending.reason}`,
+        { x: contentX, maxWidth: contentW, size: 9.5, color: C_MUTED, gapAfter: 6 });
+    });
 
     // WHERE TO START label
     if (steps.length) {
@@ -408,7 +456,7 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
       doc.setFontSize(8);
       setColor(doc, TIER_COLOR[tier]);
       ensureSpace(doc, state, lineHeight(8) + 2);
-      doc.text('WHERE TO START', contentX, state.y + 7);
+      doc.text(tier === 'possible' ? 'IF CONFIRMED, WHERE TO START' : 'WHERE TO START', contentX, state.y + 7);
       state.y += lineHeight(8) + 2;
 
       steps.forEach((step: string, idx: number) => {
@@ -426,6 +474,33 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
     doc.line(barX, cardTop + 2, barX, state.y - 4);
 
     state.y += 14;
+  };
+
+  const drawFollowUps = (
+    doc: jsPDF,
+    state: { y: number; page: number },
+    followUps: FollowUps,
+    matches: EvaluatedFramework[],
+  ) => {
+    const frameworkNames = new Map(matches.map((framework) => [framework.id, framework.name]));
+    ensureSpace(doc, state, 54);
+    drawBlockText(doc, state, 'Follow-up items',
+      { size: 13, weight: 'bold', color: C_TITLE, gapAfter: 8 });
+    followUps.forEach((followUp, index) => {
+      ensureSpace(doc, state, 64);
+      drawBlockText(doc, state, `${index + 1}. ${followUp.fieldLabel}`,
+        { size: 10, weight: 'bold', color: C_TITLE, gapAfter: 3 });
+      drawBlockText(doc, state, 'Answer: Unknown', { size: 9.5, color: C_MUTED, gapAfter: 3 });
+      drawBlockText(doc, state, `Owner: ${followUp.owner.trim() || 'Unassigned'}`,
+        { size: 9.5, gapAfter: 3 });
+      drawBlockText(doc, state, `Action: ${followUp.action}`, { size: 9.5, gapAfter: 3 });
+      if (followUp.frameworkIds.length > 0) {
+        drawBlockText(doc, state,
+          `May affect: ${followUp.frameworkIds.map((id) => frameworkNames.get(id) ?? id).join(', ')}`,
+          { size: 9.5, color: C_MUTED, gapAfter: 3 });
+      }
+      state.y += 10;
+    });
   };
 
   const drawBullet = (
@@ -535,13 +610,16 @@ const generatePDF = (matches: EvaluatedFramework[], clientName: string, mspName:
 
   const summaryLine = (
     total: number,
-    grouped: Record<'definite' | 'likely' | 'consider', EvaluatedFramework[]>
+    grouped: GroupedFrameworks,
+    followUpCount: number,
   ) => {
     const parts = [];
     parts.push(total + ' frameworks identified');
     if (grouped.definite.length) parts.push(grouped.definite.length + ' definitely apply');
     if (grouped.likely.length) parts.push(grouped.likely.length + ' likely apply');
     if (grouped.consider.length) parts.push(grouped.consider.length + ' recommended');
+    if (grouped.possible.length) parts.push(grouped.possible.length + ' possible (unconfirmed)');
+    if (followUpCount) parts.push(followUpCount + (followUpCount === 1 ? ' follow-up item' : ' follow-up items'));
     return parts.join(' \u00B7 ');
   };
 

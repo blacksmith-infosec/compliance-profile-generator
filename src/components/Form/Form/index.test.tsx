@@ -69,6 +69,7 @@ const setProfileState = (overrides: Partial<ReturnType<typeof useComplianceProfi
     handleClientNameChange,
     handlePreperNameChange,
     handleLogoImgChange: vi.fn(),
+    handleFollowUpOwnerChange: vi.fn(),
     resetForm,
     ...overrides,
   });

@@ -12,6 +12,10 @@ export const Intro = () => {
         defensible starting point in minutes, not days.
       </p>
       <p className='intro-note'>
+        Choose Unknown when an answer needs verification. Your profile will flag possible frameworks
+        and include follow-ups with owners. Choose None or No only when you have confirmed it.
+      </p>
+      <p className='intro-note'>
         This is an indicative tool. It does not constitute legal advice.
         Verify obligations with qualified counsel before making compliance decisions.
       </p>
