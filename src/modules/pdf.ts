@@ -104,7 +104,8 @@ export const downloadProfilePDF = async (lastProfileResults: ComplianceProfile) 
       data.identity.clientName,
       data.identity.preperName,
       logo,
-      data.followUps ?? []
+      data.followUps ?? [],
+      data
     );
   } catch {
     // console.error('PDF generation failed:', err);
@@ -116,6 +117,7 @@ export const downloadProfilePDF = async (lastProfileResults: ComplianceProfile) 
 // ---- Main generator ------------------------------------------------
 const generatePDF = (
   matches: EvaluatedFramework[], clientName: string, mspName: string, logo: PdfLogo | null, followUps: FollowUps,
+  profile: ComplianceProfile,
 ) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
 
@@ -132,7 +134,7 @@ const generatePDF = (
 
   const state = { y: MARGIN_TOP, page: 1 };
 
-  drawReportHeader(doc, state, clientName, mspName, matches.length, grouped, logo, followUps.length);
+  drawReportHeader(doc, state, clientName, mspName, matches.length, grouped, logo, followUps.length, profile);
 
   if (followUps.length > 0) {
     drawBlockText(doc, state,
@@ -147,6 +149,8 @@ const generatePDF = (
   });
 
   if (followUps.length > 0) drawFollowUps(doc, state, followUps, matches);
+  drawQuestionnaireAnswers(doc, state, profile.questionnaireAnswers);
+  drawReviewerQuestions(doc, state, profile.reviewerQuestions);
 
   drawFooter(doc, state);
 
@@ -210,6 +214,7 @@ const generatePDF = (
     grouped: GroupedFrameworks,
     logo: PdfLogo | null,
     followUpCount: number,
+    profile: ComplianceProfile,
   ) => {
     // Client logo in the top-right corner of the first page.
     if (logo) {
@@ -234,13 +239,15 @@ const generatePDF = (
     state.y += 36;
 
     // Metadata grid
-    const labelWidth = 80;
+    const labelWidth = 100;
     const valueWidth = CONTENT_W - labelWidth - (logo ? LOGO_MAX_SIZE + 20 : 0);
 
     const meta = [
       ['Prepared for', clientName || 'Not specified'],
       ['Prepared by', mspName || 'Not specified'],
-      ['Generated', formatToday()],
+      ['Assessment date', profile.date ? formatDate(profile.date) : 'Not recorded'],
+      ['Ruleset version', profile.rulesetVersion?.trim() || 'Not recorded'],
+      ['Generated', formatDate(new Date())],
       ['Summary', summaryLine(total, grouped, followUpCount)]
     ];
 
@@ -503,6 +510,86 @@ const generatePDF = (
     });
   };
 
+  const drawQuestionnaireAnswers = (
+    doc: jsPDF,
+    state: { y: number; page: number },
+    questionnaireAnswers: ComplianceProfile['questionnaireAnswers'],
+  ) => {
+    ensureSpace(doc, state, 54);
+    drawBlockText(doc, state, 'Questionnaire answers',
+      { size: 13, weight: 'bold', color: C_TITLE, gapAfter: 8 });
+
+    if (!questionnaireAnswers?.length) {
+      drawBlockText(doc, state, 'Questionnaire answers were not recorded for this assessment.',
+        { size: 9.5, color: C_MUTED, gapAfter: 12 });
+      return;
+    }
+
+    questionnaireAnswers.forEach((section) => {
+      ensureSpace(doc, state, 54);
+      drawBlockText(doc, state, section.sectionTitle,
+        { size: 11, weight: 'bold', color: C_TITLE, gapAfter: 6 });
+      section.answers.forEach((question) => {
+        const answerTexts = question.selectedAnswers.map((answer) => {
+          const group = answer.group.trim();
+          return group ? `${group}: ${answer.label}` : answer.label;
+        });
+        const headingHeight = approxLines(doc, question.fieldLabel, CONTENT_W, 9.5) * lineHeight(9.5) + 3;
+        const answersHeight = answerTexts.length > 0
+          ? answerTexts.reduce((height, answer) =>
+            height + approxLines(doc, answer, CONTENT_W - 14, 9.5) * lineHeight(9.5) + 1, 0)
+          : lineHeight(9.5);
+        const questionHeight = headingHeight + answersHeight + 6;
+        const fitsOnOnePage = questionHeight <= CONTENT_BOTTOM - MARGIN_TOP;
+        // Keep ordinary answer groups together; very long answers can still flow across pages.
+        ensureSpace(doc, state, fitsOnOnePage ? Math.max(36, questionHeight) : 36);
+        drawBlockText(doc, state, question.fieldLabel,
+          { size: 9.5, weight: 'bold', gapAfter: 3 });
+        if (answerTexts.length === 0) {
+          drawBlockText(doc, state, 'No answer recorded', { size: 9.5, color: C_MUTED, gapAfter: 6 });
+          return;
+        }
+        answerTexts.forEach((answerText) => {
+          drawBullet(doc, state, '\u2022', answerText, MARGIN_X, CONTENT_W, 9.5);
+        });
+        state.y += 6;
+      });
+      state.y += 6;
+    });
+  };
+
+  const drawReviewerQuestions = (
+    doc: jsPDF,
+    state: { y: number; page: number },
+    reviewerQuestions: ComplianceProfile['reviewerQuestions'],
+  ) => {
+    const questions = reviewerQuestions?.trim();
+    ensureSpace(doc, state, questions ? 54 : 130);
+    drawBlockText(doc, state, 'Reviewer’s unresolved questions',
+      { size: 13, weight: 'bold', color: C_TITLE, gapAfter: 8 });
+
+    if (questions) {
+      questions.split(/\r?\n/).forEach((line) => {
+        if (line) {
+          drawBlockText(doc, state, line, { size: 9.5 });
+          return;
+        }
+        ensureSpace(doc, state, lineHeight(9.5));
+        state.y += lineHeight(9.5);
+      });
+      state.y += 12;
+      return;
+    }
+
+    setDraw(doc, C_LIGHT_BORDER);
+    doc.setLineWidth(0.6);
+    for (let index = 0; index < 4; index++) {
+      state.y += 24;
+      doc.line(MARGIN_X, state.y, MARGIN_X + CONTENT_W, state.y);
+    }
+    state.y += 12;
+  };
+
   const drawBullet = (
     doc: jsPDF,
     state: { y: number; page: number },
@@ -623,8 +710,8 @@ const generatePDF = (
     return parts.join(' \u00B7 ');
   };
 
-  const formatToday = () => {
-    const d = new Date();
+  const formatDate = (d: Date) => {
+    if (Number.isNaN(d.getTime())) return 'Not recorded';
     const months = ['January','February','March','April','May','June',
                   'July','August','September','October','November','December'];
     return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
