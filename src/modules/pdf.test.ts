@@ -284,6 +284,59 @@ describe('downloadProfilePDF', () => {
     expect(writingLines.every(([, y]) => y >= 56 && y <= 736)).toBe(true);
   });
 
+  it.each([
+    { answerLineCount: 12, reviewerPage: 1 },
+    { answerLineCount: 13, reviewerPage: 2 },
+    { answerLineCount: 14, reviewerPage: 2 },
+    { answerLineCount: 15, reviewerPage: 2 },
+    { answerLineCount: 16, reviewerPage: 2 },
+    { answerLineCount: 17, reviewerPage: 2 },
+  ])('keeps blank reviewer space and footer together after $answerLineCount answer lines', async ({
+    answerLineCount, reviewerPage,
+  }) => {
+    pdfCalls.splitTextToSize.mockImplementation((value: string) =>
+      value === 'Earlier selected answer'
+        ? Array.from({ length: answerLineCount }, (_, index) => `Earlier answer line ${index + 1}`)
+        : [value]
+    );
+
+    await downloadProfilePDF(makeProfile(null, {
+      questionnaireAnswers: [{ sectionTitle: 'Business', answers: [{
+        fieldId: 'earlier', fieldLabel: 'Earlier question',
+        selectedAnswers: [{ value: 'earlier', label: 'Earlier selected answer', group: '' }],
+      }] }],
+      reviewerQuestions: '',
+    }));
+
+    const pageAtCall = (callOrder: number) =>
+      1 + pdfCalls.addPage.mock.invocationCallOrder.filter((order) => order < callOrder).length;
+    const textCallOrder = (text: string) => {
+      const textIndex = pdfCalls.text.mock.calls.findIndex(([value]) => value === text);
+      expect(textIndex).toBeGreaterThanOrEqual(0);
+      return pdfCalls.text.mock.invocationCallOrder[textIndex];
+    };
+    const headingOrder = textCallOrder('Reviewer’s unresolved questions');
+    const footerOrder = textCallOrder(
+      'Educational reference, not legal advice. Confirm applicability with qualified counsel.'
+    );
+    expect(pageAtCall(textCallOrder(`Earlier answer line ${answerLineCount}`))).toBe(1);
+    expect(pageAtCall(headingOrder)).toBe(reviewerPage);
+    expect(pageAtCall(footerOrder)).toBe(reviewerPage);
+
+    const writingLines = pdfCalls.line.mock.calls.filter(([, , , endY], index) => {
+      const lineOrder = pdfCalls.line.mock.invocationCallOrder[index];
+      return lineOrder > headingOrder && lineOrder < footerOrder && endY < 694;
+    });
+    expect(writingLines).toHaveLength(4);
+    for (const line of writingLines) {
+      const lineIndex = pdfCalls.line.mock.calls.indexOf(line);
+      expect(pageAtCall(pdfCalls.line.mock.invocationCallOrder[lineIndex])).toBe(reviewerPage);
+    }
+    expect(pdfCalls.addPage).toHaveBeenCalledTimes(reviewerPage - 1);
+    expect(pdfCalls.save).toHaveBeenCalledOnce();
+    expect(alert).not.toHaveBeenCalled();
+  });
+
   it('wraps long questionnaire answers and reviewer questions across pages within the content area', async () => {
     pdfCalls.splitTextToSize.mockImplementation((value: string) => {
       if (value === 'Long selected answer' || value === 'Long reviewer question') {

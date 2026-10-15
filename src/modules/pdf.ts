@@ -10,6 +10,7 @@ const MARGIN_TOP = 56;
 const MARGIN_BOTTOM = 56;
 const CONTENT_W = PAGE_W - (MARGIN_X * 2);
 const CONTENT_BOTTOM = PAGE_H - MARGIN_BOTTOM;
+const FOOTER_HEIGHT = 42;
 const LOGO_MAX_SIZE = 96;
 
 // ---- Brand colors (RGB 0-255) --------------------------------------
@@ -564,7 +565,9 @@ const generatePDF = (
     reviewerQuestions: ComplianceProfile['reviewerQuestions'],
   ) => {
     const questions = reviewerQuestions?.trim();
-    ensureSpace(doc, state, questions ? 54 : 130);
+    const emptyQuestionsHeight = lineHeight(13) + 8 + (4 * 24) + 12;
+    // Keep the heading, ruled writing space, and footer on the same page.
+    ensureSpace(doc, state, questions ? 54 : emptyQuestionsHeight + FOOTER_HEIGHT);
     drawBlockText(doc, state, 'Reviewer’s unresolved questions',
       { size: 13, weight: 'bold', color: C_TITLE, gapAfter: 8 });
 
@@ -650,7 +653,7 @@ const generatePDF = (
 
   const drawFooter = (doc: jsPDF, state: { y: number; page: number }) => {
     // Anchor footer near the bottom of the current (last) page.
-    const footerTop = CONTENT_BOTTOM - 42;
+    const footerTop = CONTENT_BOTTOM - FOOTER_HEIGHT;
     if (state.y > footerTop) {
       doc.addPage();
       state.page += 1;
