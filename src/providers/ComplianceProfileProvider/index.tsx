@@ -41,6 +41,7 @@ interface ComplianceProfileContextType {
   handlePreperNameChange: (value: string) => void;
   handleLogoImgChange: (file: File | null) => void;
   handleFollowUpOwnerChange: (fieldId: string, owner: string) => void;
+  handleReviewerQuestionsChange: (value: string) => void;
   resetForm: () => void;
 }
 
@@ -107,12 +108,15 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
   const [preperName, setPreperName] = useState('');
   const [hasGeneratedProfile, setHasGeneratedProfile] = useState(false);
   const [followUpOwners, setFollowUpOwners] = useState<Record<string, string>>({});
+  const [assessmentDate, setAssessmentDate] = useState<Date | null>(null);
+  const [reviewerQuestions, setReviewerQuestions] = useState('');
 
   const allSectionsComplete = areAllFormSectionsComplete(sections, answers);
 
   const handleAnswerChange = (fieldId: string, value: FormAnswer[]) => {
     setAnswers((prev) => pruneInactiveAnswers(sections, { ...prev, [fieldId]: value }));
     setHasGeneratedProfile(false);
+    setAssessmentDate(null);
   };
 
   const resetForm = () => {
@@ -123,6 +127,8 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
     setIndexOfExpandedSection(0);
     setHasGeneratedProfile(false);
     setFollowUpOwners({});
+    setAssessmentDate(null);
+    setReviewerQuestions('');
   };
 
   const handleFollowUpOwnerChange = (fieldId: string, owner: string) => {
@@ -130,12 +136,22 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
   };
 
   const generateProfile = () => {
+    setAssessmentDate(new Date());
     setHasGeneratedProfile(true);
   };
 
   const profile = useMemo(
-    () => evaluateProfile(frameworks, answers, { clientName, preperName, logoImg }, followUpOwners),
-    [frameworks, answers, clientName, preperName, logoImg, followUpOwners],
+    () => {
+      const evaluatedProfile = evaluateProfile(
+        frameworks, answers, { clientName, preperName, logoImg }, followUpOwners,
+      );
+      return {
+        ...evaluatedProfile,
+        date: assessmentDate ?? evaluatedProfile.date,
+        reviewerQuestions,
+      };
+    },
+    [frameworks, answers, clientName, preperName, logoImg, followUpOwners, assessmentDate, reviewerQuestions],
   );
 
   const value: ComplianceProfileContextType = {
@@ -156,6 +172,7 @@ const ComplianceProfileProvider = ({ children }: ComplianceProfileProviderProps)
     handlePreperNameChange: setPreperName,
     handleLogoImgChange: setLogoImg,
     handleFollowUpOwnerChange,
+    handleReviewerQuestionsChange: setReviewerQuestions,
     resetForm,
   };
 
