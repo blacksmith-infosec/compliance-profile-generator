@@ -8,6 +8,8 @@ import type {
 import type { FormAnswers } from '../components/Form/form.d.tsx';
 import { getAnswerForField } from '../components/Form/completion';
 import { generateFollowUps, getPendingCondition } from './followUps';
+import { createQuestionnaireSnapshot } from './assessment';
+import frameworksData from '../../data/frameworks.json';
 
 const levelWeight: Record<Evaluator['level'], number> = {
   consider: 1,
@@ -108,6 +110,8 @@ export const evaluateProfile = (
 
   return {
     date: new Date(),
+    rulesetVersion: frameworksData.rulesetVersion,
+    questionnaireAnswers: createQuestionnaireSnapshot(answers),
     definite,
     likely,
     consider,

@@ -52,7 +52,16 @@ const FrameworkList: React.FC<{ title: string; items: EvaluatedFramework[] }> = 
 };
 
 const Results: React.FC = () => {
-  const { profile, hasGeneratedProfile, allSectionsComplete, handleFollowUpOwnerChange } = useComplianceProfile();
+  const {
+    profile,
+    hasGeneratedProfile,
+    allSectionsComplete,
+    handleFollowUpOwnerChange,
+    handleReviewerQuestionsChange,
+  } = useComplianceProfile();
+  const handleReviewerQuestionsInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    handleReviewerQuestionsChange(event.target.value);
+  };
 
   if (!hasGeneratedProfile) {
     return (
@@ -136,6 +145,20 @@ const Results: React.FC = () => {
           ))}
         </section>
       )}
+      <div className='reviewer-questions'>
+        <label className='field-label' htmlFor='reviewer-questions'>Reviewer’s unresolved questions</label>
+        <p className='results-explanation' id='reviewer-questions-help'>
+          Questions are included in the PDF. Leave blank for space to write questions during review.
+        </p>
+        <textarea
+          id='reviewer-questions'
+          className='reviewer-questions-input'
+          aria-describedby='reviewer-questions-help'
+          rows={4}
+          value={profile.reviewerQuestions ?? ''}
+          onChange={handleReviewerQuestionsInputChange}
+        />
+      </div>
       <button
         className='btn btn-primary'
         onClick={() => downloadProfilePDF(profile)}

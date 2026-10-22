@@ -3,6 +3,7 @@ import {
   FieldGroupOptionProps,
   FieldOptionProps,
   Conditions,
+  FormAnswer,
 } from '../components/Form/form.d.tsx';
 
 type SchemaFieldBase = {
@@ -73,8 +74,20 @@ export interface Match {
   reasons: string[];
 };
 
+export interface QuestionnaireSection {
+  sectionTitle: string;
+  answers: {
+    fieldId: string;
+    fieldLabel: string;
+    selectedAnswers: FormAnswer[];
+  }[];
+}
+
 export interface ComplianceProfile {
   date?: Date;
+  rulesetVersion?: string;
+  questionnaireAnswers?: QuestionnaireSection[];
+  reviewerQuestions?: string;
   definite: EvaluatedFramework[];
   likely: EvaluatedFramework[];
   consider: EvaluatedFramework[];

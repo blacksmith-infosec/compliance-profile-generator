@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, render } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { FormAnswer } from '../../components/Form/form.d.tsx';
 import ComplianceProfileProvider, { useComplianceProfile } from './index';
@@ -22,6 +22,7 @@ const mountProfile = () => render(
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   // A failed test should not leave a reference to a previous provider's state.
   profileState = undefined as unknown as ReturnType<typeof useComplianceProfile>;
 });
@@ -66,10 +67,15 @@ describe('ComplianceProfileProvider', () => {
 
     act(() => profileState.generateProfile());
     expect(profileState.hasGeneratedProfile).toBe(true);
+    expect(profileState.profile.questionnaireAnswers?.flatMap((section) => section.answers.map((item) => item.fieldId)))
+      .toContain('us_states');
 
     act(() => profileState.handleAnswerChange('operating_regions', answer('canada')));
     expect(profileState.answers).not.toHaveProperty('us_states');
     expect(profileState.hasGeneratedProfile).toBe(false);
+    act(() => profileState.generateProfile());
+    expect(profileState.profile.questionnaireAnswers?.flatMap((section) => section.answers.map((item) => item.fieldId)))
+      .not.toContain('us_states');
   });
 
   it('ranks the strongest matching evaluator and includes supplied identity in the profile', () => {
@@ -163,5 +169,79 @@ describe('ComplianceProfileProvider', () => {
     });
     expect(profileState.indexOfExpandedSection).toBe(0);
     expect(profileState.hasGeneratedProfile).toBe(false);
+  });
+
+  it('records when the assessment is generated and retains that date while report details are edited', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-01T08:00:00Z'));
+    mountProfile();
+    act(() => {
+      profileState.handleAnswerChange('business_type', answer('saas'));
+      profileState.handleAnswerChange('customer_types', answer('businesses'));
+    });
+    act(() => profileState.handleAnswerChange('contracts', answer('unknown')));
+
+    const assessmentDate = new Date('2026-10-02T10:30:00Z');
+    vi.setSystemTime(assessmentDate);
+    act(() => profileState.generateProfile());
+    expect(profileState.profile.date).toEqual(assessmentDate);
+    const recordedAnswers = profileState.profile.questionnaireAnswers;
+    const rulesetVersion = profileState.profile.rulesetVersion;
+    expect(recordedAnswers?.flatMap((section) => section.answers)).toContainEqual({
+      fieldId: 'contracts',
+      fieldLabel: 'Contractual or customer-imposed requirements',
+      selectedAnswers: answer('unknown'),
+    });
+    expect(rulesetVersion).toBe('1.0.0');
+
+    vi.setSystemTime(new Date('2026-10-03T15:00:00Z'));
+    act(() => {
+      profileState.handleFollowUpOwnerChange('contracts', 'Alex Chen');
+      profileState.handleClientNameChange('Example Client');
+      profileState.handlePreperNameChange('Example MSP');
+      profileState.handleLogoImgChange(new File(['logo'], 'logo.png'));
+    });
+    expect(profileState.profile.followUps?.[0].owner).toBe('Alex Chen');
+    expect(profileState.profile.identity.clientName).toBe('Example Client');
+    expect(profileState.profile.date).toEqual(assessmentDate);
+    expect(profileState.profile.questionnaireAnswers).toEqual(recordedAnswers);
+    expect(profileState.profile.rulesetVersion).toBe(rulesetVersion);
+    expect(profileState.hasGeneratedProfile).toBe(true);
+
+    const reassessmentDate = new Date('2026-10-04T09:00:00Z');
+    vi.setSystemTime(reassessmentDate);
+    act(() => profileState.handleAnswerChange('contracts', answer('none')));
+    expect(profileState.hasGeneratedProfile).toBe(false);
+    act(() => profileState.generateProfile());
+    expect(profileState.profile.date).toEqual(reassessmentDate);
+    expect(profileState.profile.questionnaireAnswers?.flatMap((section) => section.answers)).toContainEqual({
+      fieldId: 'contracts',
+      fieldLabel: 'Contractual or customer-imposed requirements',
+      selectedAnswers: answer('none'),
+    });
+  });
+
+  it('includes reviewer questions in the report without changing its assessment date and clears them on reset', () => {
+    vi.useFakeTimers();
+    const assessmentDate = new Date('2026-10-02T10:30:00Z');
+    vi.setSystemTime(assessmentDate);
+    mountProfile();
+    act(() => profileState.generateProfile());
+
+    vi.setSystemTime(new Date('2026-10-03T15:00:00Z'));
+    const questions = 'Does the new customer contract require SOC 2?\nWho will confirm the scope?';
+    act(() => profileState.handleReviewerQuestionsChange(questions));
+    expect(profileState.profile.reviewerQuestions).toBe(questions);
+    expect(profileState.profile.date).toEqual(assessmentDate);
+    expect(profileState.hasGeneratedProfile).toBe(true);
+
+    act(() => profileState.resetForm());
+    expect(profileState.profile.reviewerQuestions).toBe('');
+    expect(profileState.hasGeneratedProfile).toBe(false);
+
+    const reassessmentDate = new Date('2026-10-05T09:00:00Z');
+    vi.setSystemTime(reassessmentDate);
+    act(() => profileState.generateProfile());
+    expect(profileState.profile.date).toEqual(reassessmentDate);
   });
 });
