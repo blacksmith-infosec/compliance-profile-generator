@@ -9,6 +9,7 @@ const pdfCalls = vi.hoisted(() => ({
   circle: vi.fn(),
   create: vi.fn(),
   getTextWidth: vi.fn((value: string) => value.length * 5),
+  line: vi.fn(),
   link: vi.fn(),
   save: vi.fn(),
   splitTextToSize: vi.fn((value: string) => [value]),
@@ -27,7 +28,7 @@ vi.mock('jspdf', () => ({
     setDrawColor = () => {};
     setLineWidth = () => {};
     text = pdfCalls.text;
-    line = () => {};
+    line = pdfCalls.line;
     circle = pdfCalls.circle;
     link = pdfCalls.link;
     addPage = pdfCalls.addPage;
@@ -113,7 +114,7 @@ describe('downloadProfilePDF', () => {
     expect(pdfCalls.addImage).toHaveBeenCalledWith(
       'data:image/png;base64,encoded-logo', 'PNG', 460, 56, 96, 24
     );
-    expect(pdfCalls.splitTextToSize).toHaveBeenCalledWith('Client', 304);
+    expect(pdfCalls.splitTextToSize).toHaveBeenCalledWith('Client', 284);
     expect(pdfCalls.save).toHaveBeenCalledOnce();
     expect(alert).not.toHaveBeenCalled();
   });
@@ -149,6 +150,218 @@ describe('downloadProfilePDF', () => {
     expect(text.indexOf('Likely framework')).toBeLessThan(text.indexOf('Recommended framework'));
     expect(pdfCalls.circle).toHaveBeenCalledTimes(3);
     expect(pdfCalls.save).toHaveBeenCalledWith('client-compliance-profile-20260928.pdf');
+  });
+
+  it('records the assessment date and ruleset separately from the PDF generation date', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      date: new Date('2026-08-15T12:00:00'),
+      rulesetVersion: '2026.08.1',
+    }));
+
+    const text = drawnText();
+    expect(text).toEqual(expect.arrayContaining([
+      'Assessment date', 'August 15, 2026', 'Ruleset version', '2026.08.1',
+      'Generated', 'September 28, 2026',
+    ]));
+    expect(pdfCalls.save).toHaveBeenCalledWith('client-compliance-profile-20260928.pdf');
+  });
+
+  it('leaves a clear gap between the longest metadata label and its value', async () => {
+    await downloadProfilePDF(makeProfile(null, { date: new Date('2026-08-15T12:00:00') }));
+
+    const label = pdfCalls.text.mock.calls.find(([value]) => value === 'Assessment date');
+    const dateValue = pdfCalls.text.mock.calls.find(([value]) => value === 'August 15, 2026');
+    expect(label).toBeDefined();
+    expect(dateValue).toBeDefined();
+    const labelEnd = (label?.[1] as number) + pdfCalls.getTextWidth('Assessment date');
+    expect((dateValue?.[1] as number) - labelEnd).toBeGreaterThanOrEqual(12);
+  });
+
+  it('identifies missing historical assessment details without substituting current values', async () => {
+    await downloadProfilePDF(makeProfile(null));
+
+    const text = drawnText();
+    expect(text).toContain('Assessment date');
+    expect(text).toContain('Ruleset version');
+    expect(text.filter((value) => value === 'Not recorded')).toHaveLength(2);
+    expect(text.filter((value) => value === 'September 28, 2026')).toHaveLength(1);
+    expect(text).toContain('Questionnaire answers were not recorded for this assessment.');
+  });
+
+  it('exports every recorded questionnaire answer with its question, section and meaningful group', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      questionnaireAnswers: [{
+        sectionTitle: 'Business operations',
+        answers: [{
+          fieldId: 'regions', fieldLabel: 'Operating regions',
+          selectedAnswers: [
+            { value: 'ca', label: 'California', group: 'United States' },
+            { value: 'eu', label: 'European Union', group: '' },
+          ],
+        }, {
+          fieldId: 'contracts', fieldLabel: 'Contract requirements',
+          selectedAnswers: [{ value: 'unknown', label: 'Unknown / needs verification', group: '' }],
+        }, {
+          fieldId: 'data', fieldLabel: 'Data handled',
+          selectedAnswers: [{ value: 'none', label: 'None of the above', group: '' }],
+        }, {
+          fieldId: 'industry', fieldLabel: 'Industry', selectedAnswers: [],
+        }],
+      }],
+    }));
+
+    expect(drawnText()).toEqual(expect.arrayContaining([
+      'Questionnaire answers', 'Business operations', 'Operating regions',
+      'United States: California', 'European Union', 'Contract requirements',
+      'Unknown / needs verification', 'Data handled', 'None of the above',
+      'Industry', 'No answer recorded',
+    ]));
+  });
+
+  it('keeps a short question and every selected answer together when the remaining page is too short', async () => {
+    pdfCalls.splitTextToSize.mockImplementation((value: string) => {
+      if (value === 'LONG CATEGORY') return ['LONG', 'CATEGORY'];
+      if (value === 'Earlier selected answer') {
+        return Array.from({ length: 23 }, (_, index) => `Earlier answer line ${index + 1}`);
+      }
+      return [value];
+    });
+
+    await downloadProfilePDF(makeProfile(null, {
+      definite: [{ ...framework, category: 'Long category' }],
+      questionnaireAnswers: [{ sectionTitle: 'Business', answers: [{
+        fieldId: 'earlier', fieldLabel: 'Earlier question',
+        selectedAnswers: [{ value: 'earlier', label: 'Earlier selected answer', group: '' }],
+      }, {
+        fieldId: 'data_types', fieldLabel: 'Data handled',
+        selectedAnswers: [
+          { value: 'pci', label: 'Payment card data', group: '' },
+          { value: 'employee', label: 'Employee data', group: '' },
+        ],
+      }] }],
+    }));
+
+    const pageNumbers = ['Data handled', 'Payment card data', 'Employee data'].map((text) => {
+      const textIndex = pdfCalls.text.mock.calls.findIndex(([value]) => value === text);
+      expect(textIndex).toBeGreaterThanOrEqual(0);
+      const textOrder = pdfCalls.text.mock.invocationCallOrder[textIndex];
+      const precedingPageBreaks = pdfCalls.addPage.mock.invocationCallOrder.filter((order) => order < textOrder);
+      return precedingPageBreaks.length;
+    });
+    expect(pageNumbers).toEqual([1, 1, 1]);
+  });
+
+  it('prints reviewer questions after questionnaire answers and preserves separate lines', async () => {
+    await downloadProfilePDF(makeProfile(null, {
+      questionnaireAnswers: [{ sectionTitle: 'Business', answers: [{
+        fieldId: 'industry', fieldLabel: 'Industry',
+        selectedAnswers: [{ value: 'software', label: 'Software', group: '' }],
+      }] }],
+      reviewerQuestions: 'Who approved the scope?\n\nConfirm the contract renewal date.',
+    }));
+
+    const text = drawnText();
+    expect(text).toContain('Reviewer’s unresolved questions');
+    expect(text).toContain('Who approved the scope?');
+    expect(text).toContain('Confirm the contract renewal date.');
+    expect(text.indexOf('Software')).toBeLessThan(text.indexOf('Reviewer’s unresolved questions'));
+    const firstQuestion = pdfCalls.text.mock.calls.find(([value]) => value === 'Who approved the scope?');
+    const secondQuestion = pdfCalls.text.mock.calls.find(([value]) => value === 'Confirm the contract renewal date.');
+    expect(secondQuestion?.[2]).toBeGreaterThan((firstQuestion?.[2] as number) + 20);
+  });
+
+  it('provides ruled writing space when reviewer questions are blank', async () => {
+    await downloadProfilePDF(makeProfile(null, { reviewerQuestions: '  \n ' }));
+
+    const titleIndex = pdfCalls.text.mock.calls.findIndex(([value]) => value === 'Reviewer’s unresolved questions');
+    expect(titleIndex).toBeGreaterThanOrEqual(0);
+    const titleOrder = pdfCalls.text.mock.invocationCallOrder[titleIndex];
+    const writingLines = pdfCalls.line.mock.calls.filter(([startX, startY, endX, endY], index) =>
+      pdfCalls.line.mock.invocationCallOrder[index] > titleOrder &&
+      startX === 56 && endX === 556 && startY === endY && startY < 694
+    );
+    expect(writingLines).toHaveLength(4);
+    expect(writingLines.every(([, y]) => y >= 56 && y <= 736)).toBe(true);
+  });
+
+  it.each([
+    { answerLineCount: 12, reviewerPage: 1 },
+    { answerLineCount: 13, reviewerPage: 2 },
+    { answerLineCount: 14, reviewerPage: 2 },
+    { answerLineCount: 15, reviewerPage: 2 },
+    { answerLineCount: 16, reviewerPage: 2 },
+    { answerLineCount: 17, reviewerPage: 2 },
+  ])('keeps blank reviewer space and footer together after $answerLineCount answer lines', async ({
+    answerLineCount, reviewerPage,
+  }) => {
+    pdfCalls.splitTextToSize.mockImplementation((value: string) =>
+      value === 'Earlier selected answer'
+        ? Array.from({ length: answerLineCount }, (_, index) => `Earlier answer line ${index + 1}`)
+        : [value]
+    );
+
+    await downloadProfilePDF(makeProfile(null, {
+      questionnaireAnswers: [{ sectionTitle: 'Business', answers: [{
+        fieldId: 'earlier', fieldLabel: 'Earlier question',
+        selectedAnswers: [{ value: 'earlier', label: 'Earlier selected answer', group: '' }],
+      }] }],
+      reviewerQuestions: '',
+    }));
+
+    const pageAtCall = (callOrder: number) =>
+      1 + pdfCalls.addPage.mock.invocationCallOrder.filter((order) => order < callOrder).length;
+    const textCallOrder = (text: string) => {
+      const textIndex = pdfCalls.text.mock.calls.findIndex(([value]) => value === text);
+      expect(textIndex).toBeGreaterThanOrEqual(0);
+      return pdfCalls.text.mock.invocationCallOrder[textIndex];
+    };
+    const headingOrder = textCallOrder('Reviewer’s unresolved questions');
+    const footerOrder = textCallOrder(
+      'Educational reference, not legal advice. Confirm applicability with qualified counsel.'
+    );
+    expect(pageAtCall(textCallOrder(`Earlier answer line ${answerLineCount}`))).toBe(1);
+    expect(pageAtCall(headingOrder)).toBe(reviewerPage);
+    expect(pageAtCall(footerOrder)).toBe(reviewerPage);
+
+    const writingLines = pdfCalls.line.mock.calls.filter(([, , , endY], index) => {
+      const lineOrder = pdfCalls.line.mock.invocationCallOrder[index];
+      return lineOrder > headingOrder && lineOrder < footerOrder && endY < 694;
+    });
+    expect(writingLines).toHaveLength(4);
+    for (const line of writingLines) {
+      const lineIndex = pdfCalls.line.mock.calls.indexOf(line);
+      expect(pageAtCall(pdfCalls.line.mock.invocationCallOrder[lineIndex])).toBe(reviewerPage);
+    }
+    expect(pdfCalls.addPage).toHaveBeenCalledTimes(reviewerPage - 1);
+    expect(pdfCalls.save).toHaveBeenCalledOnce();
+    expect(alert).not.toHaveBeenCalled();
+  });
+
+  it('wraps long questionnaire answers and reviewer questions across pages within the content area', async () => {
+    pdfCalls.splitTextToSize.mockImplementation((value: string) => {
+      if (value === 'Long selected answer' || value === 'Long reviewer question') {
+        return Array.from({ length: 80 }, (_, index) => `${value} line ${index + 1}`);
+      }
+      return [value];
+    });
+
+    await downloadProfilePDF(makeProfile(null, {
+      questionnaireAnswers: [{ sectionTitle: 'Business', answers: [{
+        fieldId: 'contracts', fieldLabel: 'Contract requirements',
+        selectedAnswers: [{ value: 'contract', label: 'Long selected answer', group: '' }],
+      }] }],
+      reviewerQuestions: 'Long reviewer question',
+    }));
+
+    expect(pdfCalls.addPage.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(drawnText()).toContain('Long selected answer line 80');
+    expect(drawnText()).toContain('Long reviewer question line 80');
+    const auditLines = pdfCalls.text.mock.calls.filter(([value]) =>
+      typeof value === 'string' && value.startsWith('Long ')
+    );
+    expect(auditLines).toHaveLength(160);
+    expect(auditLines.every(([, , y]) => y >= 56 && y <= 736)).toBe(true);
+    expect(pdfCalls.save).toHaveBeenCalledOnce();
   });
 
   it('includes framework details, numbered first steps, and a clickable reference', async () => {
@@ -207,8 +420,8 @@ describe('downloadProfilePDF', () => {
 
     const firstLine = pdfCalls.text.mock.calls.find(([value]) => value === 'Long client');
     const secondLine = pdfCalls.text.mock.calls.find(([value]) => value === 'name');
-    expect(firstLine?.[1]).toBe(136);
-    expect(secondLine?.[1]).toBe(136);
+    expect(firstLine?.[1]).toBe(156);
+    expect(secondLine?.[1]).toBe(156);
     expect(secondLine?.[2]).toBeGreaterThan(firstLine?.[2] as number);
   });
 

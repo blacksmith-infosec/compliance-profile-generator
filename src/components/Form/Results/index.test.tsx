@@ -55,6 +55,7 @@ const baseContext = {
   handlePreperNameChange: vi.fn(),
   handleLogoImgChange: vi.fn(),
   handleFollowUpOwnerChange: vi.fn(),
+  handleReviewerQuestionsChange: vi.fn(),
   resetForm: vi.fn(),
 };
 
@@ -69,6 +70,7 @@ describe('Results', () => {
 
     expect(html).toContain('No applicable compliance frameworks were identified for the provided responses.');
     expect(html).not.toContain('Download PDF');
+    expect(html).not.toContain('Reviewer’s unresolved questions');
   });
 
   it('prompts for missing form answers before a profile is generated', () => {
@@ -125,6 +127,26 @@ describe('Results', () => {
     expect(html).toContain('<h3>Consider</h3>');
     expect(html).not.toContain('<h3>Definite</h3>');
     expect(html).not.toContain('<h3>Likely</h3>');
+  });
+
+  it('shows saved reviewer questions with instructions for the PDF writing space', () => {
+    mockedUseComplianceProfile.mockReturnValue({
+      ...baseContext,
+      profile: {
+        ...emptyProfile,
+        consider: [framework('Consider', 'consider')],
+        reviewerQuestions: 'Do any signed contracts require an independent audit?',
+      },
+    });
+
+    const html = renderToStaticMarkup(<Results />);
+
+    expect(html).toContain('Reviewer’s unresolved questions');
+    expect(html).toContain(
+      'Questions are included in the PDF. Leave blank for space to write questions during review.',
+    );
+    expect(html).toContain('aria-describedby="reviewer-questions-help"');
+    expect(html).toContain('Do any signed contracts require an independent audit?</textarea>');
   });
 
   it('shows possible frameworks with their exact unresolved conditions and conditional tier', () => {

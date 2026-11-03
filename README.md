@@ -19,6 +19,8 @@ Each result includes the framework name, category, brief description, the specif
 
 Every question offers **Unknown / needs verification**, distinct from a confirmed No or None. Unknown answers count as answered for onboarding and create follow-up items with suggested owners that you can edit. Related conditional questions remain available until a confirmed answer rules them out. The results and downloadable PDF include the follow-ups, owners, and the specific answers that could change framework applicability. A framework already supported by known answers keeps its confirmed tier and shows any potential higher tier separately.
 
+The PDF also records the assessment date, ruleset version, and questionnaire answers used for that run, including Unknown and None answers. Add unresolved reviewer questions in the results panel to include them in the report; leaving the field empty provides writing space in the PDF. Editing report details preserves the assessment date. Generating a new profile records a new date so saved reports can be compared when the business, answers, or rules change.
+
 The 42 frameworks currently covered include HIPAA, PCI DSS, NIST 800-171, CMMC, SOC 2, ISO 27001, GDPR, NIS2, UK GDPR, UK Cyber Essentials, CCPA, NY DFS Part 500 (with Class A and Limited Exemption tier entries), GLBA / FTC Safeguards, SOX, SEC cyber rules, FERPA, COPPA, FedRAMP, CIS Controls, GTIA Cybersecurity Trustmark, NERC CIP, CJIS, IRS 1075, state breach laws, major state privacy laws (TX, MA, CO, VA, CT, NY SHIELD), and state cybersecurity safe harbor laws (OH, UT, CT, IA, OK, TN, NE, TX, OR). Each framework includes a "Where to start" section with actionable first steps.
 
 ## Run locally
@@ -72,6 +74,8 @@ Frameworks can declare `suppressed_by` IDs to avoid duplicate results. A matched
 marked `suppressed_by_baseline`. All matching reasons at the highest level are retained.
 
 This design keeps all compliance logic auditable and contributable in a single file.
+
+`data/frameworks.json` declares the `rulesetVersion` included in each assessment. Increment this version when framework triggers, suppression rules, questionnaire choices or conditions, industry mappings, or evaluation behavior change. This version identifies the assessment rules independently of the application release version. Existing assessments retain their recorded version when exported.
 
 ## Contributing
 

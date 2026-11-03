@@ -219,3 +219,129 @@ describe('framework evaluation', () => {
     expect(evaluateProfile([], answers, identity, { contracts: '' }).followUps?.[0].owner).toBe('');
   });
 });
+
+describe('assessment record', () => {
+  it('records the maintained ruleset version and assessment date', () => {
+    const profile = evaluateProfile([], {}, identity);
+
+    expect(profile.rulesetVersion).toBe('1.0.0');
+    expect(profile.date).toBeInstanceOf(Date);
+  });
+
+  it('snapshots selected answers with schema labels and section order', () => {
+    const answers: FormAnswers = {
+      customer_types: [{ value: 'businesses', label: 'Other businesses (B2B)', group: '' }],
+      business_type: [{ value: 'medical_practice', label: 'Medical practice', group: 'Healthcare' }],
+      operating_regions: [
+        { value: 'eu', label: 'European Union / EEA', group: '' },
+        { value: 'us', label: 'United States', group: '' },
+      ],
+    };
+
+    expect(evaluateProfile([], answers, identity).questionnaireAnswers).toEqual([
+      {
+        sectionTitle: 'Where you operate',
+        answers: [{
+          fieldId: 'operating_regions',
+          fieldLabel: 'Operating regions or data subjects',
+          selectedAnswers: answers.operating_regions,
+        }],
+      },
+      {
+        sectionTitle: 'Organization',
+        answers: [{
+          fieldId: 'business_type',
+          fieldLabel: 'Type of business',
+          selectedAnswers: answers.business_type,
+        }],
+      },
+      {
+        sectionTitle: 'Customers and contracts',
+        answers: [{
+          fieldId: 'customer_types',
+          fieldLabel: 'Customer types',
+          selectedAnswers: answers.customer_types,
+        }],
+      },
+    ]);
+  });
+
+  it('retains Unknown and None as distinct questionnaire answers', () => {
+    const unknown = [{ value: 'unknown', label: 'Unknown / needs verification', group: '' }];
+    const none = [{ value: 'none', label: 'None of the above', group: '' }];
+    const unknownProfile = evaluateProfile([], { data_types: unknown }, identity);
+    const noneProfile = evaluateProfile([], { data_types: none }, identity);
+
+    expect(unknownProfile.questionnaireAnswers?.[0].answers[0].selectedAnswers).toEqual(unknown);
+    expect(noneProfile.questionnaireAnswers?.[0].answers[0].selectedAnswers).toEqual(none);
+  });
+
+  it('records every supplied questionnaire answer used to evaluate a direct profile call', () => {
+    const answers: FormAnswers = {
+      operating_regions: [{ value: 'uk', label: 'United Kingdom', group: '' }],
+      us_states: [{ value: 'ca', label: 'California', group: '' }],
+      revenue: [{ value: '50m_250m', label: '$50M to $250M', group: '' }],
+    };
+    const profile = evaluateProfile(frameworks, answers, identity);
+
+    expect(profile.definite.some((item) => item.id === 'ccpa_cpra')).toBe(true);
+    expect(profile.questionnaireAnswers?.flatMap((section) => section.answers)).toEqual([
+      {
+        fieldId: 'operating_regions', fieldLabel: 'Operating regions or data subjects',
+        selectedAnswers: answers.operating_regions,
+      },
+      { fieldId: 'us_states', fieldLabel: 'US state operations', selectedAnswers: answers.us_states },
+      { fieldId: 'revenue', fieldLabel: 'Annual revenue (USD)', selectedAnswers: answers.revenue },
+    ]);
+  });
+
+  it('retains supplied fields and options while omitting missing answers and unknown schema keys', () => {
+    const answers: FormAnswers = {
+      operating_regions: [{ value: 'uk', label: 'United Kingdom', group: '' }],
+      us_states: [{ value: 'ca', label: 'California', group: '' }],
+      revenue: [{ value: '50m_250m', label: '$50M to $250M', group: '' }],
+      data_types: [{ value: 'cui', label: 'Controlled Unclassified Information (CUI)', group: '' }],
+      customer_types: [{ value: 'businesses', label: 'Other businesses (B2B)', group: '' }],
+      contracts: [
+        { value: 'dfars', label: 'DFARS 252.204-7012 / 7019 / 7020 clauses', group: '' },
+        { value: 'soc2', label: 'Customer-mandated SOC 2 reports', group: '' },
+      ],
+      public_status: [],
+      removed_question: [{ value: 'old', label: 'Old answer', group: '' }],
+    };
+    const snapshot = evaluateProfile([], answers, identity).questionnaireAnswers;
+
+    expect(snapshot?.map((section) => section.sectionTitle)).toEqual([
+      'Where you operate', 'Organization', 'Data handled', 'Customers and contracts',
+    ]);
+    expect(snapshot?.flatMap((section) => section.answers.map((answer) => answer.fieldId)))
+      .toEqual(['operating_regions', 'us_states', 'revenue', 'data_types', 'customer_types', 'contracts']);
+    expect(snapshot?.[3].answers[1].selectedAnswers).toEqual(answers.contracts);
+    expect(evaluateProfile([], {}, identity).questionnaireAnswers).toEqual([]);
+  });
+
+  it('keeps questions active while their conditional trigger is Unknown', () => {
+    const answers: FormAnswers = {
+      operating_regions: [{ value: 'unknown', label: 'Unknown / needs verification', group: '' }],
+      us_states: [{ value: 'unknown', label: 'Unknown / needs verification', group: '' }],
+    };
+
+    expect(evaluateProfile([], answers, identity).questionnaireAnswers?.[0].answers.map((answer) => answer.fieldId))
+      .toEqual(['operating_regions', 'us_states']);
+  });
+
+  it('keeps the recorded answers independent of subsequent form edits', () => {
+    const answers: FormAnswers = {
+      business_type: [{ value: 'medical_practice', label: 'Medical practice', group: 'Healthcare' }],
+    };
+    const profile = evaluateProfile([], answers, identity);
+    answers.business_type[0].label = 'Corrected label';
+    answers.business_type[0].value = 'dental_practice';
+    answers.business_type[0].group = 'Corrected group';
+    answers.business_type.push({ value: 'unknown', label: 'Unknown / needs verification', group: '' });
+
+    expect(profile.questionnaireAnswers?.[0].answers[0].selectedAnswers).toEqual([
+      { value: 'medical_practice', label: 'Medical practice', group: 'Healthcare' },
+    ]);
+  });
+});

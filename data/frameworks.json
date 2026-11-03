@@ -1,4 +1,5 @@
 {
+  "rulesetVersion": "1.0.0",
   "frameworks": [
     {
       "id": "hipaa",

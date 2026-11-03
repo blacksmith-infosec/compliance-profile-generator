@@ -1110,7 +1110,8 @@ a:hover {
 .follow-up-status, .follow-up-frameworks { color: var(--text-muted); }
 .follow-up-card .field-label { margin-top: var(--space-4); }
 
-.follow-up-owner {
+.follow-up-owner,
+.reviewer-questions-input {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 12px;
@@ -1121,9 +1122,20 @@ a:hover {
   font: inherit;
 }
 
-.follow-up-owner:focus-visible {
+.follow-up-owner:focus-visible,
+.reviewer-questions-input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.reviewer-questions { margin-block: var(--space-5); }
+
+.reviewer-questions-input {
+  display: block;
+  min-height: 120px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .framework-name {
